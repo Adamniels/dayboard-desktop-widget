@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#070708;color:#F4F3FA;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .db-scroll::-webkit-scrollbar{width:8px;height:8px}
+  .db-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
+  .db-scroll::-webkit-scrollbar-track{background:transparent}
+  input,select,textarea{font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:none}
+  @keyframes dbFade{from{opacity:0}to{opacity:1}}
+  @keyframes dbPop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+  @keyframes dbUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes dbPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.9)}}
+  @keyframes dbRing{0%{opacity:.5;transform:scale(.8)}70%{opacity:0;transform:scale(1.5)}100%{opacity:0}}
+  @keyframes dbChime{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(4deg)}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:radial-gradient(130% 100% at 50% -10%,#141318 0%,#070708 60%);display:flex;flex-direction:column">
+
+  <!-- GLOBAL TOOLBAR -->
+  <div style="height:56px;flex:0 0 56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06);position:relative;z-index:30">
+    <div style="display:flex;align-items:center;gap:10px;width:240px">
+      <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#7C6CF6,#5A47D6);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 10px rgba(124,108,246,.45)">◐</div>
+      <span style="font-weight:600;font-size:15px;letter-spacing:-.01em">Dayboard</span>
+    </div>
+    <div style="display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:3px;gap:2px">
+      <button onClick="{{ showDisplay }}" style="{{ tabDisplayStyle }}">Display</button>
+      <button onClick="{{ showAdmin }}" style="{{ tabAdminStyle }}">Admin</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;width:240px">
+      <sc-if value="{{ isDisplay }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:2px">
+          <button onClick="{{ setLandscape }}" style="{{ orientLandStyle }}" title="Landscape">▭</button>
+          <button onClick="{{ setPortrait }}" style="{{ orientPortStyle }}" title="Portrait">▯</button>
+        </div>
+        <button onClick="{{ onFire }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid rgba(255,107,107,.3);background:rgba(255,107,107,.12);color:#FF9A9A;border-radius:9px;font-size:12.5px;font-weight:500;cursor:pointer">◔ Test reminder</button>
+      </sc-if>
+      <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ showDisplay }}" style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.7);border-radius:9px;font-size:12.5px;font-weight:500;cursor:pointer">↗ Open Display</button>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- ============ DISPLAY SURFACE ============ -->
+  <sc-if value="{{ isDisplay }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:26px;min-height:0">
+    <div style="{{ displayFrameStyle }}">
+      <div style="position:absolute;inset:0;border-radius:22px;background:#08080B;border:1px solid rgba(255,255,255,.07);box-shadow:0 40px 100px -30px rgba(0,0,0,.9),0 0 0 8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden;display:flex;flex-direction:column">
+
+        <!-- KIOSK HEADER -->
+        <div style="{{ kioskHeaderStyle }}">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <span style="font-size:{{ clockSize }};font-weight:600;letter-spacing:-.03em;line-height:.9;font-variant-numeric:tabular-nums">{{ clockTime }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:rgba(255,255,255,.35);font-weight:400">{{ clockSecs }}</span>
+              <span style="font-size:15px;color:rgba(255,255,255,.4);font-weight:500">{{ clockAmpm }}</span>
+            </div>
+            <div style="font-size:15px;color:rgba(255,255,255,.55);font-weight:500;letter-spacing:.01em">{{ dateStr }}</div>
+          </div>
+          <div style="{{ headerRightStyle }}">
+            <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 12px;background:rgba(63,184,175,.1);border:1px solid rgba(63,184,175,.25);border-radius:20px;flex:0 0 auto">
+              <span style="width:7px;height:7px;border-radius:50%;background:#3FB8AF;box-shadow:0 0 8px #3FB8AF;animation:dbPulse 2.4s ease-in-out infinite"></span>
+              <span style="font-size:12px;color:#9FE3DE;font-weight:500;white-space:nowrap">Synced with Google · {{ syncLabel }}</span>
+            </div>
+            <div style="display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:2px">
+              <button onClick="{{ viewDay }}" style="{{ vDayStyle }}">Day</button>
+              <button onClick="{{ viewWeek }}" style="{{ vWeekStyle }}">Week</button>
+              <button onClick="{{ viewMonth }}" style="{{ vMonthStyle }}">Month</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BODY: calendar + panel -->
+        <div style="{{ displayBodyStyle }}">
+
+          <!-- CALENDAR -->
+          <div style="{{ calWrapStyle }}">
+            <!-- WEEK / DAY grid -->
+            <sc-if value="{{ showGrid }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;height:100%;min-height:0">
+                <!-- day header -->
+                <sc-if value="{{ isWeek }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;padding-left:56px;border-bottom:1px solid rgba(255,255,255,.06);flex:0 0 auto">
+                    <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+                      <div style="{{ d.headStyle }}">
+                        <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);font-weight:600">{{ d.label }}</span>
+                        <span style="{{ d.numStyle }}">{{ d.date }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ isDay }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;padding-left:56px;border-bottom:1px solid rgba(255,255,255,.06);flex:0 0 auto">
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:9px 0">
+                      <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#A99CFF;font-weight:600">{{ dayHeadLabel }}</span>
+                      <span style="font-size:18px;font-weight:600">{{ dayHeadDate }}</span>
+                    </div>
+                  </div>
+                </sc-if>
+                <!-- scroll body -->
+                <div class="db-scroll" id="db-grid-scroll" style="flex:1;overflow-y:auto;min-height:0">
+                  <div style="position:relative;width:100%;height:{{ gridHeight }}">
+                    <sc-for list="{{ hours }}" as="h" hint-placeholder-count="14">
+                      <div style="{{ h.lineStyle }}"></div>
+                      <div style="{{ h.labelStyle }}">{{ h.label }}</div>
+                    </sc-for>
+                    <sc-for list="{{ gridEvents }}" as="ev" hint-placeholder-count="4">
+                      <div onClick="{{ ev.onSelect }}" style="{{ ev.boxStyle }}" style-hover="{{ ev.hoverStyle }}">
+                        <div style="{{ ev.titleStyle }}">{{ ev.title }}</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ev.timeLabel }}</div>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ nowVisible }}" hint-placeholder-val="{{ true }}">
+                      <div style="{{ nowDotStyle }}"></div>
+                      <div style="{{ nowLineStyle }}"></div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <!-- MONTH -->
+            <sc-if value="{{ isMonth }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;height:100%;padding:4px 4px 8px">
+                <div style="text-align:center;font-size:16px;font-weight:600;padding:6px 0 10px;letter-spacing:-.01em">{{ monthLabel }}</div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);flex:0 0 auto">
+                  <sc-for list="{{ dows }}" as="w" hint-placeholder-count="7">
+                    <div style="text-align:center;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.35);font-weight:600;padding-bottom:6px">{{ w }}</div>
+                  </sc-for>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;flex:1;gap:3px;min-height:0">
+                  <sc-for list="{{ monthCells }}" as="c" hint-placeholder-count="35">
+                    <div style="{{ c.cellStyle }}">
+                      <span style="{{ c.numStyle }}">{{ c.num }}</span>
+                      <div style="display:flex;flex-direction:column;gap:2px;margin-top:3px;overflow:hidden">
+                        <sc-for list="{{ c.dots }}" as="ev" hint-placeholder-count="0">
+                          <div style="{{ ev.style }}">{{ ev.title }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- SIDE PANEL -->
+          <div style="{{ panelStyle }}" class="db-scroll">
+            <!-- surfaced todos (focus block) -->
+            <sc-if value="{{ surfacedVisible }}" hint-placeholder-val="{{ true }}">
+              <div style="animation:dbUp .4s ease;background:linear-gradient(160deg,rgba(63,184,175,.22),rgba(63,184,175,.07));border:1px solid rgba(63,184,175,.45);border-radius:16px;padding:15px 16px;box-shadow:0 0 0 1px rgba(63,184,175,.06),0 8px 30px -12px rgba(63,184,175,.4)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+                  <span style="width:8px;height:8px;border-radius:2px;background:#3FB8AF;box-shadow:0 0 10px rgba(63,184,175,.7)"></span>
+                  <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#9FE3DE;font-weight:600">Focus · {{ surfacedProject }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <sc-for list="{{ surfacedItems }}" as="t" hint-placeholder-count="3">
+                    <div onClick="{{ t.onToggle }}" style="display:flex;align-items:center;gap:11px;padding:7px 4px;border-radius:8px;cursor:pointer">
+                      <span style="{{ t.boxStyle }}">{{ t.check }}</span>
+                      <span style="{{ t.textStyle }}">{{ t.text }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- NOW / NEXT -->
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px">
+              <sc-if value="{{ hasNow }}" hint-placeholder-val="{{ true }}">
+                <div>
+                  <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+                    <span style="width:6px;height:6px;border-radius:50%;background:#FF6B6B;box-shadow:0 0 8px #FF6B6B"></span>
+                    <span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);font-weight:600">Now</span>
+                  </div>
+                  <div style="font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.15">{{ nowTitle }}</div>
+                  <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+                    <span style="font-size:13px;color:rgba(255,255,255,.5)">{{ nowRange }}</span>
+                    <span style="font-size:12px;color:#FF9A9A;background:rgba(255,107,107,.12);padding:2px 8px;border-radius:6px;font-weight:500">{{ nowLeft }}</span>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ hasNext }}" hint-placeholder-val="{{ true }}">
+                <div style="padding-top:13px;border-top:1px solid rgba(255,255,255,.07)">
+                  <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);font-weight:600;margin-bottom:7px">Up next</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                    <span style="font-size:16px;font-weight:600;letter-spacing:-.01em">{{ nextTitle }}</span>
+                    <span style="font-size:13px;color:rgba(255,255,255,.5);white-space:nowrap">{{ nextTime }}</span>
+                  </div>
+                  <div style="font-size:12px;color:#A99CFF;margin-top:3px">{{ nextRel }}</div>
+                </div>
+              </sc-if>
+            </div>
+
+            <!-- POMODORO -->
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;display:flex;align-items:center;gap:18px">
+              <div style="position:relative;width:96px;height:96px;flex:0 0 auto">
+                <svg viewBox="0 0 120 120" style="width:96px;height:96px;transform:rotate(-90deg)">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="8"></circle>
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="{{ pomoColor }}" stroke-width="8" stroke-linecap="round" style="{{ pomoRingStyle }}"></circle>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0">
+                  <span style="font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em">{{ pomoMMSS }}</span>
+                  <span style="font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);font-weight:600">{{ pomoState }}</span>
+                </div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:9px">
+                <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.85)">{{ pomoLabel }}</div>
+                <div style="display:flex;gap:7px">
+                  <button onClick="{{ pomoToggle }}" style="{{ pomoBtnStyle }}">{{ pomoBtnLabel }}</button>
+                  <button onClick="{{ pomoReset }}" style="height:32px;width:32px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);cursor:pointer;font-size:14px">↺</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- NOTE -->
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);font-weight:600;margin-bottom:9px">Notes</div>
+              <div style="font-size:13.5px;line-height:1.5;color:rgba(255,255,255,.72);font-family:'JetBrains Mono',monospace">{{ noteSnippet }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ ADMIN SURFACE ============ -->
+  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;display:flex;min-height:0">
+    <!-- nav rail -->
+    <div style="width:210px;flex:0 0 210px;border-right:1px solid rgba(255,255,255,.06);padding:16px 12px;display:flex;flex-direction:column;gap:3px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.35);font-weight:600;padding:4px 10px 10px">Control room</div>
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+        <button onClick="{{ n.onClick }}" style="{{ n.style }}">
+          <span style="width:18px;text-align:center">{{ n.icon }}</span>
+          <span>{{ n.label }}</span>
+        </button>
+      </sc-for>
+      <div style="margin-top:auto;background:rgba(124,108,246,.08);border:1px solid rgba(124,108,246,.2);border-radius:12px;padding:12px">
+        <div style="font-size:11px;color:#A99CFF;font-weight:600;margin-bottom:4px">Source of truth</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.5);line-height:1.45">Dayboard syncs both ways with Google so plans follow you to your phone.</div>
+      </div>
+    </div>
+
+    <!-- admin content -->
+    <div class="db-scroll" style="flex:1;overflow-y:auto;min-height:0;padding:28px 32px">
+
+      <!-- CALENDAR / EVENTS -->
+      <sc-if value="{{ isTabCalendar }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div>
+              <h1 style="font-size:23px;font-weight:600;letter-spacing:-.02em;margin:0">Events</h1>
+              <p style="margin:5px 0 0;font-size:13.5px;color:rgba(255,255,255,.5)">Create meetings and focus blocks. Link a block to a project to surface its to-dos.</p>
+            </div>
+            <button onClick="{{ onNewEvent }}" style="height:38px;padding:0 16px;border-radius:11px;border:none;background:#7C6CF6;color:#fff;font-weight:600;font-size:13.5px;cursor:pointer;box-shadow:0 4px 14px rgba(124,108,246,.4)">+ New event</button>
+          </div>
+          <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start">
+            <!-- mini calendar + list -->
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px">
+                <div style="text-align:center;font-size:13.5px;font-weight:600;margin-bottom:10px">{{ monthLabel }}</div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">
+                  <sc-for list="{{ dows }}" as="w" hint-placeholder-count="7">
+                    <div style="text-align:center;font-size:9.5px;color:rgba(255,255,255,.35);font-weight:600;padding-bottom:5px">{{ w }}</div>
+                  </sc-for>
+                  <sc-for list="{{ miniCells }}" as="c" hint-placeholder-count="35">
+                    <div style="{{ c.style }}">{{ c.num }}</div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <!-- event list / editor -->
+            <div>
+              <sc-if value="{{ editorOpen }}" hint-placeholder-val="{{ true }}">
+                <div style="animation:dbPop .2s ease;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px">
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-size:15px;font-weight:600">{{ editorTitle }}</span>
+                    <button onClick="{{ onCancelEdit }}" style="width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.6);cursor:pointer">✕</button>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <label style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:500">Title</label>
+                    <input value="{{ editTitle }}" onChange="{{ onEditTitle }}" placeholder="Event title" style="height:40px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px"/>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <label style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:500">Type</label>
+                    <div style="display:flex;gap:8px">
+                      <button onClick="{{ onTypeMeeting }}" style="{{ typeMeetingStyle }}"><span style="width:10px;height:10px;border-radius:3px;background:#7C6CF6;display:inline-block"></span> Meeting</button>
+                      <button onClick="{{ onTypeBlock }}" style="{{ typeBlockStyle }}"><span style="width:10px;height:10px;border-radius:3px;background:repeating-linear-gradient(45deg,#3FB8AF 0 3px,transparent 3px 6px);border:1px solid #3FB8AF;display:inline-block"></span> Focus block</button>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <label style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:500">Start</label>
+                      <input type="time" value="{{ editStart }}" onChange="{{ onEditStart }}" style="height:40px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px"/>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <label style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:500">End</label>
+                      <input type="time" value="{{ editEnd }}" onChange="{{ onEditEnd }}" style="height:40px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px"/>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <label style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:500">Recurrence</label>
+                      <select value="{{ editRecur }}" onChange="{{ onEditRecur }}" style="height:40px;padding:0 11px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px">
+                        <sc-for list="{{ recurOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+                      </select>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <label style="font-size:11.5px;color:rgba(255,255,255,.5);font-weight:500">Link to project</label>
+                      <select value="{{ editProject }}" onChange="{{ onEditProject }}" style="{{ editProjectSelectStyle }}">
+                        <option value="">No project</option>
+                        <sc-for list="{{ projectOpts }}" as="p" hint-placeholder-count="3"><option value="{{ p.id }}">{{ p.name }}</option></sc-for>
+                      </select>
+                    </div>
+                  </div>
+                  <sc-if value="{{ editShowLinkHint }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;gap:9px;align-items:flex-start;background:rgba(63,184,175,.08);border:1px solid rgba(63,184,175,.22);border-radius:10px;padding:11px 12px">
+                      <span style="font-size:13px">✨</span>
+                      <span style="font-size:12px;color:#9FE3DE;line-height:1.45">This block's project to-dos will surface on the Display whenever you're inside it.</span>
+                    </div>
+                  </sc-if>
+                  <div style="display:flex;gap:10px;padding-top:4px">
+                    <button onClick="{{ onSaveEvent }}" style="flex:1;height:40px;border-radius:11px;border:none;background:#7C6CF6;color:#fff;font-weight:600;font-size:14px;cursor:pointer">Save event</button>
+                    <sc-if value="{{ editCanDelete }}" hint-placeholder-val="{{ true }}">
+                      <button onClick="{{ onDeleteEvent }}" style="height:40px;padding:0 16px;border-radius:11px;border:1px solid rgba(255,107,107,.3);background:rgba(255,107,107,.1);color:#FF9A9A;font-weight:600;font-size:14px;cursor:pointer">Delete</button>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ listOpen }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);font-weight:600;margin-bottom:2px">Today's schedule</div>
+                  <sc-for list="{{ adminEvents }}" as="ev" hint-placeholder-count="4">
+                    <button onClick="{{ ev.onEdit }}" style="display:flex;align-items:center;gap:13px;width:100%;text-align:left;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:13px 15px;cursor:pointer" style-hover="{{ hoverRow }}">
+                      <span style="{{ ev.dotStyle }}"></span>
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:14px;font-weight:600">{{ ev.title }}</div>
+                        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">{{ ev.sub }}</div>
+                      </div>
+                      <span style="{{ ev.tagStyle }}">{{ ev.tag }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- PROJECTS -->
+      <sc-if value="{{ isTabProjects }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width:760px;margin:0 auto">
+          <h1 style="font-size:23px;font-weight:600;letter-spacing:-.02em;margin:0">Projects</h1>
+          <p style="margin:5px 0 22px;font-size:13.5px;color:rgba(255,255,255,.5)">Each project holds to-dos. Linking a focus block to a project surfaces these on the Display during that block.</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ adminProjects }}" as="p" hint-placeholder-count="3">
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden">
+                <button onClick="{{ p.onToggle }}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:none;padding:16px 18px;cursor:pointer">
+                  <span style="{{ p.dotStyle }}"></span>
+                  <span style="font-size:15px;font-weight:600;color:#fff;flex:1">{{ p.name }}</span>
+                  <span style="font-size:12px;color:rgba(255,255,255,.45);background:rgba(255,255,255,.06);padding:3px 9px;border-radius:7px">{{ p.openLabel }}</span>
+                  <span style="{{ p.chevStyle }}">⌄</span>
+                </button>
+                <sc-if value="{{ p.expanded }}" hint-placeholder-val="{{ true }}">
+                  <div style="padding:0 18px 16px;display:flex;flex-direction:column;gap:2px">
+                    <sc-for list="{{ p.todos }}" as="t" hint-placeholder-count="3">
+                      <div onClick="{{ t.onToggle }}" style="display:flex;align-items:center;gap:12px;padding:9px 6px;border-radius:9px;cursor:pointer" style-hover="{{ hoverRow }}">
+                        <span style="{{ t.boxStyle }}">{{ t.check }}</span>
+                        <span style="{{ t.textStyle }}">{{ t.text }}</span>
+                      </div>
+                    </sc-for>
+                    <div style="display:flex;gap:9px;margin-top:8px">
+                      <input value="{{ p.draft }}" onChange="{{ p.onDraft }}" onKeyDown="{{ p.onKey }}" placeholder="Add a to-do…" style="flex:1;height:38px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;font-size:13.5px"/>
+                      <button onClick="{{ p.onAdd }}" style="height:38px;padding:0 15px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);font-weight:600;font-size:13.5px;cursor:pointer">Add</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- REMINDERS & TIMERS -->
+      <sc-if value="{{ isTabReminders }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width:760px;margin:0 auto">
+          <h1 style="font-size:23px;font-weight:600;letter-spacing:-.02em;margin:0">Reminders &amp; timers</h1>
+          <p style="margin:5px 0 22px;font-size:13.5px;color:rgba(255,255,255,.5)">Fire a reminder at an absolute time or relative to now. Run a Pomodoro that mirrors to the Display.</p>
+          <div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px">
+                <div style="font-size:13px;font-weight:600;margin-bottom:14px">New reminder</div>
+                <input value="{{ remDraftTitle }}" onChange="{{ onRemTitle }}" placeholder="Reminder title" style="height:40px;width:100%;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px;margin-bottom:11px"/>
+                <div style="display:flex;gap:8px;margin-bottom:12px">
+                  <button onClick="{{ onRemModeAbs }}" style="{{ remAbsStyle }}">At a time</button>
+                  <button onClick="{{ onRemModeRel }}" style="{{ remRelStyle }}">In…</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+                  <sc-if value="{{ remIsAbs }}" hint-placeholder-val="{{ true }}">
+                    <input type="time" value="{{ remDraftTime }}" onChange="{{ onRemTime }}" style="height:40px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px"/>
+                  </sc-if>
+                  <sc-if value="{{ remIsRel }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;align-items:center;gap:8px;height:40px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)"><span style="color:rgba(255,255,255,.5);font-size:13px">in</span><input value="{{ remDraftMins }}" onChange="{{ onRemMins }}" style="width:46px;background:transparent;border:none;color:#fff;font-size:14px;text-align:right"/><span style="color:rgba(255,255,255,.5);font-size:13px">min</span></div>
+                  </sc-if>
+                  <select value="{{ remDraftRecur }}" onChange="{{ onRemRecur }}" style="height:40px;padding:0 11px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px">
+                    <sc-for list="{{ recurOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o }}">{{ o }}</option></sc-for>
+                  </select>
+                </div>
+                <button onClick="{{ onAddReminder }}" style="height:40px;width:100%;border-radius:11px;border:none;background:#7C6CF6;color:#fff;font-weight:600;font-size:14px;cursor:pointer">Add reminder</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ adminReminders }}" as="r" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:13px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:13px 15px">
+                    <span style="font-size:15px">◔</span>
+                    <div style="flex:1">
+                      <div style="font-size:14px;font-weight:600">{{ r.title }}</div>
+                      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px">{{ r.sub }}</div>
+                    </div>
+                    <button onClick="{{ r.onFire }}" style="font-size:11.5px;font-weight:500;color:#A99CFF;background:rgba(124,108,246,.12);border:1px solid rgba(124,108,246,.25);border-radius:7px;padding:4px 9px;cursor:pointer">Test</button>
+                    <button onClick="{{ r.onToggle }}" style="{{ r.toggleStyle }}"><span style="{{ r.knobStyle }}"></span></button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <!-- pomodoro control -->
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:16px">
+              <div style="font-size:13px;font-weight:600;align-self:flex-start">Pomodoro</div>
+              <div style="position:relative;width:140px;height:140px">
+                <svg viewBox="0 0 120 120" style="width:140px;height:140px;transform:rotate(-90deg)">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"></circle>
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="{{ pomoColor }}" stroke-width="7" stroke-linecap="round" style="{{ pomoRingStyle }}"></circle>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <span style="font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em">{{ pomoMMSS }}</span>
+                  <span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);font-weight:600">{{ pomoState }}</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;width:100%">
+                <sc-for list="{{ pomoPresets }}" as="pr" hint-placeholder-count="3">
+                  <button onClick="{{ pr.onClick }}" style="{{ pr.style }}">{{ pr.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:8px;width:100%">
+                <button onClick="{{ pomoToggle }}" style="flex:1;height:40px;border-radius:11px;border:none;background:#7C6CF6;color:#fff;font-weight:600;font-size:14px;cursor:pointer">{{ pomoBtnLabel }}</button>
+                <button onClick="{{ pomoReset }}" style="height:40px;width:44px;border-radius:11px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);cursor:pointer;font-size:16px">↺</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- NOTES -->
+      <sc-if value="{{ isTabNotes }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width:720px;margin:0 auto">
+          <h1 style="font-size:23px;font-weight:600;letter-spacing:-.02em;margin:0">Notes</h1>
+          <p style="margin:5px 0 22px;font-size:13.5px;color:rgba(255,255,255,.5)">General notes, or attach one to a project.</p>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:18px">
+            <textarea value="{{ noteDraft }}" onChange="{{ onNoteDraft }}" placeholder="Write a note…" style="width:100%;min-height:64px;resize:vertical;padding:12px 13px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px;line-height:1.5"></textarea>
+            <div style="display:flex;gap:10px;margin-top:11px">
+              <select value="{{ noteDraftPid }}" onChange="{{ onNotePid }}" style="flex:1;height:40px;padding:0 11px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#fff;font-size:14px">
+                <option value="">General note</option>
+                <sc-for list="{{ projectOpts }}" as="p" hint-placeholder-count="3"><option value="{{ p.id }}">Attach to {{ p.name }}</option></sc-for>
+              </select>
+              <button onClick="{{ onAddNote }}" style="height:40px;padding:0 18px;border-radius:11px;border:none;background:#7C6CF6;color:#fff;font-weight:600;font-size:14px;cursor:pointer">Add note</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <sc-for list="{{ adminNotes }}" as="n" hint-placeholder-count="2">
+              <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:10px">
+                <div style="font-size:13.5px;line-height:1.55;color:rgba(255,255,255,.82);font-family:'JetBrains Mono',monospace">{{ n.text }}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <span style="{{ n.tagStyle }}">{{ n.tag }}</span>
+                  <button onClick="{{ n.onDelete }}" style="font-size:11.5px;color:rgba(255,255,255,.4);background:transparent;border:none;cursor:pointer">Delete</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- DISPLAY & SYNC -->
+      <sc-if value="{{ isTabDisplay }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px">
+          <div>
+            <h1 style="font-size:23px;font-weight:600;letter-spacing:-.02em;margin:0">Display &amp; sync</h1>
+            <p style="margin:5px 0 0;font-size:13.5px;color:rgba(255,255,255,.5)">Drive the always-on kiosk and manage two-way Google Calendar sync.</p>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:14px">Display is showing</div>
+            <div style="display:flex;gap:9px;margin-bottom:16px">
+              <button onClick="{{ viewDay }}" style="{{ dcDayStyle }}">Day</button>
+              <button onClick="{{ viewWeek }}" style="{{ dcWeekStyle }}">Week</button>
+              <button onClick="{{ viewMonth }}" style="{{ dcMonthStyle }}">Month</button>
+            </div>
+            <div style="display:flex;gap:9px">
+              <button onClick="{{ setLandscape }}" style="{{ dcLandStyle }}">▭ Landscape</button>
+              <button onClick="{{ setPortrait }}" style="{{ dcPortStyle }}">▯ Portrait</button>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07)">
+              <button onClick="{{ showDisplay }}" style="height:38px;padding:0 15px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.85);font-weight:600;font-size:13.5px;cursor:pointer">↗ Preview Display</button>
+              <button onClick="{{ onFire }}" style="height:38px;padding:0 15px;border-radius:10px;border:1px solid rgba(255,107,107,.3);background:rgba(255,107,107,.1);color:#FF9A9A;font-weight:600;font-size:13.5px;cursor:pointer">◔ Trigger reminder takeover</button>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:13px">
+                <div style="width:40px;height:40px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#444">G</div>
+                <div>
+                  <div style="font-size:14.5px;font-weight:600">Google Calendar</div>
+                  <div style="{{ googleSubStyle }}">{{ googleSub }}</div>
+                </div>
+              </div>
+              <button onClick="{{ onToggleGoogle }}" style="{{ googleBtnStyle }}">{{ googleBtnLabel }}</button>
+            </div>
+            <sc-if value="{{ googleConnected }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:22px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07)">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <div style="display:flex;flex-direction:column;align-items:center"><span style="font-size:11px;color:rgba(255,255,255,.45)">Dayboard</span></div>
+                  <span style="color:#3FB8AF;font-size:18px">⇄</span>
+                  <div style="display:flex;flex-direction:column;align-items:center"><span style="font-size:11px;color:rgba(255,255,255,.45)">Google</span></div>
+                </div>
+                <div style="flex:1;font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.45">Two-way sync is on. Last sync <span style="color:#9FE3DE">{{ syncLabel }}</span> — changes here appear on your phone.</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ===== EVENT DETAIL POPOVER (Display) ===== -->
+  <sc-if value="{{ hasSelected }}" hint-placeholder-val="{{ true }}">
+    <div onClick="{{ onCloseDetail }}" style="position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:60;animation:dbFade .15s ease">
+      <div onClick="{{ stop }}" style="animation:dbPop .22s cubic-bezier(.2,.8,.3,1);width:380px;max-width:90vw;background:#16151B;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:24px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)">
+        <div style="display:flex;align-items:flex-start;gap:13px;margin-bottom:18px">
+          <span style="{{ detailDotStyle }}"></span>
+          <div style="flex:1">
+            <div style="font-size:20px;font-weight:600;letter-spacing:-.01em">{{ detailTitle }}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:3px">{{ detailType }}</div>
+          </div>
+          <button onClick="{{ onCloseDetail }}" style="width:30px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.6);cursor:pointer">✕</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div style="display:flex;align-items:center;gap:11px"><span style="width:18px;text-align:center;color:rgba(255,255,255,.4)">◷</span><span style="font-size:14px;color:rgba(255,255,255,.85)">{{ detailTime }}</span></div>
+          <div style="display:flex;align-items:center;gap:11px"><span style="width:18px;text-align:center;color:rgba(255,255,255,.4)">↻</span><span style="font-size:14px;color:rgba(255,255,255,.85)">{{ detailRecur }}</span></div>
+          <sc-if value="{{ detailHasProject }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:11px"><span style="width:18px;text-align:center;color:rgba(255,255,255,.4)">⊡</span><span style="{{ detailProjStyle }}">{{ detailProject }}</span></div>
+          </sc-if>
+        </div>
+        <button onClick="{{ onEditFromDetail }}" style="margin-top:20px;width:100%;height:40px;border-radius:11px;border:1px solid rgba(124,108,246,.4);background:rgba(124,108,246,.15);color:#BCB2FF;font-weight:600;font-size:14px;cursor:pointer">Edit in Admin</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== REMINDER TAKEOVER ===== -->
+  <sc-if value="{{ reminderFiring }}" hint-placeholder-val="{{ true }}">
+    <div style="position:fixed;inset:0;z-index:80;background:radial-gradient(120% 90% at 50% 40%,#2a1a1a 0%,#0a0708 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:dbFade .3s ease">
+      <div style="position:relative;margin-bottom:40px">
+        <div style="position:absolute;inset:-20px;border-radius:50%;border:2px solid rgba(255,107,107,.5);animation:dbRing 1.8s ease-out infinite"></div>
+        <div style="position:absolute;inset:-20px;border-radius:50%;border:2px solid rgba(255,107,107,.5);animation:dbRing 1.8s ease-out infinite .6s"></div>
+        <div style="width:128px;height:128px;border-radius:50%;background:linear-gradient(160deg,#FF6B6B,#E04848);display:flex;align-items:center;justify-content:center;font-size:58px;box-shadow:0 20px 60px -10px rgba(255,107,107,.6)"><span style="display:inline-block;animation:dbChime 1.4s ease-in-out infinite;transform-origin:top center">🔔</span></div>
+      </div>
+      <div style="font-size:13px;text-transform:uppercase;letter-spacing:.18em;color:#FF9A9A;font-weight:600;margin-bottom:14px">Reminder</div>
+      <div style="font-size:54px;font-weight:600;letter-spacing:-.02em;margin-bottom:10px;text-align:center;padding:0 24px">{{ fireTitle }}</div>
+      <div style="font-size:20px;color:rgba(255,255,255,.55);margin-bottom:48px;font-variant-numeric:tabular-nums">{{ fireTime }}</div>
+      <button onClick="{{ onDismiss }}" style="height:54px;padding:0 44px;border-radius:16px;border:none;background:#fff;color:#161118;font-weight:600;font-size:17px;cursor:pointer;box-shadow:0 10px 40px -10px rgba(255,255,255,.4)">Dismiss</button>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = (() => {
+    const now = new Date(); now.setHours(10, 42, 8, 0);
+    return {
+      surface: 'display',
+      orientation: 'landscape',
+      view: 'week',
+      adminTab: 'calendar',
+      nowMs: now.getTime(),
+      selectedId: null,
+      expanded: { dayboard: true, errands: false, writing: false },
+      drafts: { todo: {}, noteText: '', notePid: '', remTitle: '', remTime: '18:00', remMins: '25', remMode: 'abs', remRecur: 'None' },
+      pomo: { remaining: 25 * 60, total: 25 * 60, running: false, label: 'Afternoon focus' },
+      firing: false,
+      googleConnected: true,
+      lastSyncMs: now.getTime() - 9000,
+      editor: null,
+      projects: [
+        { id: 'dayboard', name: 'Dayboard', color: '#7C6CF6' },
+        { id: 'errands', name: 'Errands', color: '#E2A23B' },
+        { id: 'writing', name: 'Launch writing', color: '#3FB8AF' },
+      ],
+      todos: {
+        dayboard: [
+          { id: 't1', text: 'Wire up two-way Google sync', done: false },
+          { id: 't2', text: 'Polish reminder takeover animation', done: false },
+          { id: 't3', text: 'Ship the portrait layout', done: false },
+          { id: 't4', text: 'Mac Mini kiosk autostart on boot', done: true },
+        ],
+        errands: [
+          { id: 't5', text: 'Buy groceries', done: false },
+          { id: 't6', text: 'Renew passport', done: false },
+        ],
+        writing: [
+          { id: 't7', text: 'Outline the launch post', done: false },
+        ],
+      },
+      notes: [
+        { id: 'n1', text: 'Mac Mini drives the kiosk — autostarts on boot. Static IP 192.168.1.42.', projectId: '' },
+        { id: 'n2', text: 'Portrait layout must be ready before Friday demo.', projectId: 'dayboard' },
+      ],
+      reminders: [
+        { id: 'r1', title: 'Take out the trash', timeH: 20, timeM: 0, recur: 'Weekly', enabled: true },
+        { id: 'r2', title: 'Stretch break', timeH: 16, timeM: 30, recur: 'Daily', enabled: true },
+      ],
+      events: this.seedEvents(),
+      nextId: 100,
+    };
+  })();
+
+  ACC = '#7C6CF6'; TEAL = '#3FB8AF'; AMBER = '#E2A23B'; RED = '#FF6B6B';
+  START = 7; END = 21;
+
+  todayIdx() { return (new Date().getDay() + 6) % 7; }
+
+  seedEvents() {
+    const ti = (new Date().getDay() + 6) % 7;
+    const cl = (i) => Math.max(0, Math.min(6, i));
+    const e = (id, title, type, day, sh, sm, eh, em, o) => Object.assign({ id, title, type, day, sh, sm, eh, em, recur: 'None', projectId: '' }, o || {});
+    return [
+      e('e1', 'Daily Standup', 'meeting', ti, 9, 0, 9, 15, { recur: 'Weekdays' }),
+      e('e2', 'Deep work', 'block', ti, 9, 30, 11, 30, { projectId: 'dayboard' }),
+      e('e3', 'Lunch', 'block', ti, 12, 30, 13, 30, { color: '#E2A23B' }),
+      e('e4', 'Design review', 'meeting', ti, 15, 0, 16, 0),
+      e('e5', 'Sprint planning', 'meeting', cl(ti - 1), 10, 0, 11, 0),
+      e('e6', '1:1 with Sam', 'meeting', cl(ti + 1), 11, 0, 11, 30),
+      e('e7', 'Gym', 'block', cl(ti + 1), 18, 0, 19, 0),
+      e('e8', 'Write launch post', 'block', cl(ti - 1), 14, 0, 16, 0, { projectId: 'writing', color: '#3FB8AF' }),
+    ];
+  }
+
+  componentDidMount() {
+    this._lastKey = this.state.view + '|' + this.state.orientation + '|' + this.state.surface;
+    setTimeout(() => this.scrollToNow(), 120);
+    this.timer = setInterval(() => {
+      this.setState((st) => {
+        const upd = { nowMs: st.nowMs + 1000 };
+        if (st.pomo.running && st.pomo.remaining > 0) {
+          const r = st.pomo.remaining - 1;
+          upd.pomo = Object.assign({}, st.pomo, { remaining: r, running: r > 0 });
+        }
+        return upd;
+      });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+  componentDidUpdate() {
+    const k = this.state.view + '|' + this.state.orientation + '|' + this.state.surface;
+    if (k !== this._lastKey) { this._lastKey = k; setTimeout(() => this.scrollToNow(), 80); }
+  }
+  scrollToNow(tries) {
+    const el = document.getElementById('db-grid-scroll');
+    if (!el || el.scrollHeight <= el.clientHeight + 4) {
+      if ((tries || 0) < 12) setTimeout(() => this.scrollToNow((tries || 0) + 1), 80);
+      return;
+    }
+    const HOURPX = this.state.view === 'day' ? 64 : 54;
+    const now = new Date(this.state.nowMs);
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    el.scrollTop = Math.max(0, ((nowMin - 95) - this.START * 60) / 60 * HOURPX);
+  }
+
+  pad(n) { return String(n).padStart(2, '0'); }
+  hexA(hex, a) { const h = hex.replace('#', ''); return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${a})`; }
+  h12(h) { const x = h % 12; return x === 0 ? 12 : x; }
+  ap(h) { return h >= 12 ? 'PM' : 'AM'; }
+  short(h, m) { return `${this.h12(h)}:${this.pad(m)}`; }
+  range(sh, sm, eh, em) { return `${this.short(sh, sm)} – ${this.short(eh, em)} ${this.ap(eh)}`; }
+  evColor(ev) { if (ev.color) return ev.color; return ev.type === 'block' ? this.TEAL : this.ACC; }
+  mondayOf(d) { const m = new Date(d); m.setHours(0, 0, 0, 0); m.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return m; }
+  ymd(d) { return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
+
+  setSurface(s) { this.setState({ surface: s, selectedId: null }); }
+  setView(v) { this.setState({ view: v }); }
+  toggleTodo(pid, tid) { this.setState((st) => ({ todos: Object.assign({}, st.todos, { [pid]: st.todos[pid].map((t) => t.id === tid ? Object.assign({}, t, { done: !t.done }) : t) }) })); }
+
+  renderVals() {
+    const s = this.state, now = new Date(s.nowMs);
+    const HOURPX = this.state.view === 'day' ? 64 : 54;
+    const GUTTER = 56;
+    const A = this.ACC, R = this.RED;
+    const ti = this.todayIdx();
+    const monday = this.mondayOf(now);
+
+    // ---------- toolbar / tabs ----------
+    const seg = (active) => active
+      ? { padding: '6px 16px', borderRadius: '8px', border: 'none', background: '#fff', color: '#161118', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }
+      : { padding: '6px 16px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'rgba(255,255,255,.55)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' };
+    const pill = (active) => active
+      ? { width: '32px', height: '28px', borderRadius: '7px', border: 'none', background: 'rgba(255,255,255,.14)', color: '#fff', fontSize: '13px', cursor: 'pointer' }
+      : { width: '32px', height: '28px', borderRadius: '7px', border: 'none', background: 'transparent', color: 'rgba(255,255,255,.4)', fontSize: '13px', cursor: 'pointer' };
+    const vseg = (active) => active
+      ? { padding: '5px 13px', borderRadius: '7px', border: 'none', background: 'rgba(124,108,246,.9)', color: '#fff', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }
+      : { padding: '5px 13px', borderRadius: '7px', border: 'none', background: 'transparent', color: 'rgba(255,255,255,.5)', fontSize: '12.5px', fontWeight: 500, cursor: 'pointer' };
+
+    // ---------- clock ----------
+    const clockTime = `${this.h12(now.getHours())}:${this.pad(now.getMinutes())}`;
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    const syncDelta = Math.floor((s.nowMs - s.lastSyncMs) / 1000);
+    const syncLabel = syncDelta < 60 ? 'just now' : `${Math.floor(syncDelta / 60)}m ago`;
+
+    const isLandscape = s.orientation === 'landscape';
+    const displayFrameStyle = isLandscape
+      ? { position: 'relative', width: '100%', maxWidth: '1180px', aspectRatio: '16 / 9' }
+      : { position: 'relative', height: 'min(80vh,880px)', aspectRatio: '10 / 16' };
+    const kioskHeaderStyle = isLandscape
+      ? { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px 14px', padding: '22px 28px 18px', flex: '0 0 auto' }
+      : { display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '12px', padding: '18px 20px 14px', flex: '0 0 auto' };
+    const headerRightStyle = isLandscape
+      ? { display: 'flex', alignItems: 'center', gap: '12px' }
+      : { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' };
+    const displayBodyStyle = { flex: 1, display: 'flex', flexDirection: isLandscape ? 'row' : 'column', minHeight: 0, padding: isLandscape ? '0 18px 18px' : '0 16px 16px', gap: '14px' };
+    const calWrapStyle = { flex: isLandscape ? 1 : '1 1 54%', minWidth: 0, minHeight: 0, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.06)', borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column' };
+    const panelStyle = { width: isLandscape ? '320px' : 'auto', flex: isLandscape ? '0 0 320px' : '1 1 46%', minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '13px', paddingRight: '2px' };
+    const clockSize = isLandscape ? '46px' : '40px';
+
+    // ---------- week header ----------
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weekDays = labels.map((label, i) => {
+      const d = new Date(monday); d.setDate(monday.getDate() + i);
+      const isToday = i === ti;
+      return {
+        label,
+        date: String(d.getDate()),
+        isToday,
+        headStyle: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px', padding: '9px 0' },
+        numStyle: isToday
+          ? { fontSize: '16px', fontWeight: 600, color: '#fff', background: A, width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '1px' }
+          : { fontSize: '16px', fontWeight: 600, color: 'rgba(255,255,255,.8)' },
+      };
+    });
+
+    // ---------- hours ----------
+    const hours = [];
+    for (let h = this.START; h <= this.END; h++) {
+      const top = (h - this.START) * HOURPX;
+      hours.push({
+        label: `${this.h12(h)} ${this.ap(h)}`,
+        lineStyle: { position: 'absolute', left: GUTTER + 'px', right: 0, top: top + 'px', height: '0', borderTop: '1px solid rgba(255,255,255,.05)' },
+        labelStyle: { position: 'absolute', left: 0, top: (top - 6) + 'px', width: GUTTER - 8 + 'px', textAlign: 'right', fontSize: '10.5px', color: 'rgba(255,255,255,.32)', fontWeight: 500 },
+      });
+    }
+    const gridHeight = ((this.END - this.START) * HOURPX) + 'px';
+
+    // ---------- positioned events ----------
+    const mkBox = (ev, colIndex, cols) => {
+      const c = this.evColor(ev);
+      const top = ((ev.sh * 60 + ev.sm) - this.START * 60) / 60 * HOURPX;
+      const height = Math.max(20, ((ev.eh * 60 + ev.em) - (ev.sh * 60 + ev.sm)) / 60 * HOURPX);
+      const left = `calc(${GUTTER}px + (100% - ${GUTTER}px) * ${colIndex} / ${cols} + 4px)`;
+      const width = `calc((100% - ${GUTTER}px) / ${cols} - 8px)`;
+      const base = { position: 'absolute', left, width, top: top + 'px', height: (height - 3) + 'px', borderRadius: '9px', padding: height < 34 ? '3px 9px' : '6px 9px', overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '1px', transition: 'filter .15s', zIndex: 2, boxSizing: 'border-box' };
+      if (ev.type === 'block') {
+        base.background = this.hexA(c, 0.06);
+        base.backgroundImage = `repeating-linear-gradient(45deg, ${this.hexA(c, 0.16)} 0 6px, ${this.hexA(c, 0.02)} 6px 13px)`;
+        base.border = `1px dashed ${this.hexA(c, 0.45)}`;
+      } else {
+        base.background = this.hexA(c, 0.18);
+        base.border = `1px solid ${this.hexA(c, 0.32)}`;
+        base.borderLeft = `3px solid ${c}`;
+      }
+      return {
+        id: ev.id, title: ev.title,
+        timeLabel: this.short(ev.sh, ev.sm),
+        boxStyle: base,
+        hoverStyle: { filter: 'brightness(1.18)' },
+        titleStyle: { fontSize: height < 34 ? '11.5px' : '12.5px', fontWeight: 600, color: '#F4F3FA', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+        onSelect: () => this.setState({ selectedId: ev.id }),
+      };
+    };
+    let gridEvents;
+    if (s.view === 'day') {
+      gridEvents = s.events.filter((e) => e.day === ti).map((e) => mkBox(e, 0, 1));
+    } else {
+      gridEvents = s.events.map((e) => mkBox(e, e.day, 7));
+    }
+
+    // ---------- now line ----------
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const nowTop = (nowMin - this.START * 60) / 60 * HOURPX;
+    const nowVisible = (s.view !== 'month') && now.getHours() >= this.START && now.getHours() < this.END;
+    const nowLineStyle = { position: 'absolute', left: GUTTER + 'px', right: '6px', top: nowTop + 'px', height: '0', borderTop: `2px solid ${R}`, zIndex: 6, pointerEvents: 'none' };
+    const nowDotStyle = { position: 'absolute', left: (GUTTER - 4) + 'px', top: (nowTop - 4) + 'px', width: '9px', height: '9px', borderRadius: '50%', background: R, zIndex: 7, boxShadow: `0 0 8px ${R}` };
+
+    // ---------- month ----------
+    const monthLabel = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const dows = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const byDate = {};
+    s.events.forEach((ev) => { const d = new Date(monday); d.setDate(monday.getDate() + ev.day); const k = this.ymd(d); (byDate[k] = byDate[k] || []).push(ev); });
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    const gridStart = new Date(first); gridStart.setDate(1 - ((first.getDay() + 6) % 7));
+    const monthCells = [], miniCells = [];
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(gridStart); d.setDate(gridStart.getDate() + i);
+      const inMonth = d.getMonth() === now.getMonth();
+      const isToday = this.ymd(d) === this.ymd(now);
+      const evs = byDate[this.ymd(d)] || [];
+      monthCells.push({
+        num: String(d.getDate()),
+        cellStyle: { background: isToday ? this.hexA(A, 0.12) : 'rgba(255,255,255,.02)', border: isToday ? `1px solid ${this.hexA(A, 0.5)}` : '1px solid rgba(255,255,255,.04)', borderRadius: '8px', padding: '5px 6px', display: 'flex', flexDirection: 'column', overflow: 'hidden', opacity: inMonth ? 1 : 0.35 },
+        numStyle: { fontSize: '12px', fontWeight: isToday ? 700 : 500, color: isToday ? '#fff' : 'rgba(255,255,255,.7)' },
+        dots: evs.slice(0, 3).map((ev) => ({ title: ev.title, style: { fontSize: '9.5px', fontWeight: 500, color: '#F4F3FA', background: this.hexA(this.evColor(ev), ev.type === 'block' ? 0.18 : 0.28), borderRadius: '4px', padding: '1px 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } })),
+      });
+      if (i < 42) miniCells.push({
+        num: inMonth ? String(d.getDate()) : '',
+        style: { textAlign: 'center', fontSize: '11.5px', padding: '6px 0', borderRadius: '7px', color: isToday ? '#fff' : (evs.length ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.4)'), background: isToday ? A : 'transparent', fontWeight: isToday ? 700 : (evs.length ? 600 : 400), position: 'relative' },
+      });
+    }
+
+    // ---------- now / next ----------
+    const today = s.events.filter((e) => e.day === ti).slice().sort((a, b) => (a.sh * 60 + a.sm) - (b.sh * 60 + b.sm));
+    let cur = null, nxt = null;
+    for (const e of today) {
+      const st0 = e.sh * 60 + e.sm, en0 = e.eh * 60 + e.em;
+      if (nowMin >= st0 && nowMin < en0) cur = e;
+      if (nowMin < st0 && !nxt) nxt = e;
+    }
+    const fmtLeft = (mins) => mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m left` : `${mins} min left`;
+    const fmtRel = (mins) => mins >= 60 ? `in ${Math.floor(mins / 60)}h ${mins % 60}m` : `in ${mins} min`;
+    const hasNow = !!cur, hasNext = !!nxt;
+    const nowLeftMin = cur ? (cur.eh * 60 + cur.em) - nowMin : 0;
+    const nextRelMin = nxt ? (nxt.sh * 60 + nxt.sm) - nowMin : 0;
+
+    // ---------- surfaced todos ----------
+    const surfacedVisible = !!(cur && cur.type === 'block' && cur.projectId && s.todos[cur.projectId]);
+    const surfProj = surfacedVisible ? this.state.projects.find((p) => p.id === cur.projectId) : null;
+    const surfacedItems = surfacedVisible ? s.todos[cur.projectId].map((t) => ({
+      id: t.id, text: t.text, done: t.done, check: t.done ? '✓' : '',
+      onToggle: () => this.toggleTodo(cur.projectId, t.id),
+      boxStyle: { width: '20px', height: '20px', borderRadius: '6px', flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#08080B', fontWeight: 700, background: t.done ? this.TEAL : 'transparent', border: t.done ? `1px solid ${this.TEAL}` : '1.5px solid rgba(255,255,255,.3)' },
+      textStyle: { fontSize: '14px', color: t.done ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.9)', textDecoration: t.done ? 'line-through' : 'none', fontWeight: 500 },
+    })) : [];
+
+    // ---------- pomodoro ----------
+    const C = 2 * Math.PI * 52;
+    const frac = s.pomo.total ? s.pomo.remaining / s.pomo.total : 0;
+    const pomoColor = s.pomo.running ? A : 'rgba(124,108,246,.55)';
+    const pomoRingStyle = { strokeDasharray: C.toFixed(1), strokeDashoffset: (C * (1 - frac)).toFixed(1), transition: 'stroke-dashoffset 1s linear, stroke .3s' };
+    const pomoMMSS = `${this.pad(Math.floor(s.pomo.remaining / 60))}:${this.pad(s.pomo.remaining % 60)}`;
+    const pomoBtnLabel = s.pomo.running ? 'Pause' : (s.pomo.remaining < s.pomo.total ? 'Resume' : 'Start');
+    const pomoBtnStyle = { flex: 1, height: '32px', borderRadius: '9px', border: 'none', background: s.pomo.running ? 'rgba(255,255,255,.12)' : A, color: '#fff', fontWeight: 600, fontSize: '12.5px', cursor: 'pointer' };
+    const presetDefs = [{ m: 25, l: '25' }, { m: 15, l: '15' }, { m: 5, l: '5' }];
+    const pomoPresets = presetDefs.map((p) => ({
+      label: `${p.l}m`,
+      onClick: () => this.setState({ pomo: { remaining: p.m * 60, total: p.m * 60, running: false, label: s.pomo.label } }),
+      style: { flex: 1, height: '32px', borderRadius: '8px', border: '1px solid rgba(255,255,255,.1)', background: s.pomo.total === p.m * 60 ? this.hexA(A, 0.2) : 'rgba(255,255,255,.04)', color: s.pomo.total === p.m * 60 ? '#BCB2FF' : 'rgba(255,255,255,.6)', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' },
+    }));
+    const pomoToggle = () => this.setState((st) => ({ pomo: Object.assign({}, st.pomo, { running: !st.pomo.running && st.pomo.remaining > 0 }) }));
+    const pomoReset = () => this.setState((st) => ({ pomo: Object.assign({}, st.pomo, { remaining: st.pomo.total, running: false }) }));
+
+    // ---------- detail ----------
+    const sel = s.selectedId ? s.events.find((e) => e.id === s.selectedId) : null;
+    const selColor = sel ? this.evColor(sel) : A;
+    const selProj = sel && sel.projectId ? this.state.projects.find((p) => p.id === sel.projectId) : null;
+
+    // ---------- reminder fire ----------
+    const fireRem = s.reminders[0] || { title: 'Take out the trash', timeH: 20, timeM: 0 };
+
+    // ---------- ADMIN ----------
+    const navDefs = [
+      { key: 'calendar', label: 'Calendar', icon: '◷' },
+      { key: 'projects', label: 'Projects', icon: '⊡' },
+      { key: 'reminders', label: 'Reminders', icon: '◔' },
+      { key: 'notes', label: 'Notes', icon: '✎' },
+      { key: 'display', label: 'Display & Sync', icon: '▦' },
+    ];
+    const navItems = navDefs.map((n) => ({
+      label: n.label, icon: n.icon, onClick: () => this.setState({ adminTab: n.key }),
+      style: { display: 'flex', alignItems: 'center', gap: '11px', width: '100%', textAlign: 'left', padding: '10px 11px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '13.5px', fontWeight: s.adminTab === n.key ? 600 : 500, background: s.adminTab === n.key ? 'rgba(124,108,246,.15)' : 'transparent', color: s.adminTab === n.key ? '#fff' : 'rgba(255,255,255,.6)' },
+    }));
+
+    // admin event list (today)
+    const adminEvents = today.map((ev) => {
+      const c = this.evColor(ev);
+      const proj = ev.projectId ? this.state.projects.find((p) => p.id === ev.projectId) : null;
+      return {
+        id: ev.id, title: ev.title,
+        sub: `${this.range(ev.sh, ev.sm, ev.eh, ev.em)}${proj ? ' · ' + proj.name : ''}`,
+        dotStyle: { width: '11px', height: '11px', borderRadius: '4px', flex: '0 0 auto', background: ev.type === 'block' ? this.hexA(c, 0.25) : c, backgroundImage: ev.type === 'block' ? `repeating-linear-gradient(45deg,${c} 0 2px,transparent 2px 4px)` : 'none', border: ev.type === 'block' ? `1px solid ${c}` : 'none' },
+        tag: ev.type === 'block' ? 'Block' : 'Meeting',
+        tagStyle: { fontSize: '11px', fontWeight: 600, padding: '3px 9px', borderRadius: '7px', color: ev.type === 'block' ? '#9FE3DE' : '#BCB2FF', background: ev.type === 'block' ? 'rgba(63,184,175,.12)' : 'rgba(124,108,246,.14)' },
+        onEdit: () => this.openEditor(ev),
+      };
+    });
+
+    // editor
+    const ed = s.editor;
+    const editorOpen = !!ed;
+    const tbtn = (active, c) => ({ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '40px', borderRadius: '10px', border: active ? `1px solid ${this.hexA(c, 0.6)}` : '1px solid rgba(255,255,255,.1)', background: active ? this.hexA(c, 0.14) : 'rgba(255,255,255,.03)', color: active ? '#fff' : 'rgba(255,255,255,.6)', fontSize: '13.5px', fontWeight: 600, cursor: 'pointer' });
+
+    // projects panel
+    const adminProjects = this.state.projects.map((p) => {
+      const list = s.todos[p.id] || [];
+      const open = list.filter((t) => !t.done).length;
+      return {
+        id: p.id, name: p.name, expanded: !!s.expanded[p.id],
+        dotStyle: { width: '12px', height: '12px', borderRadius: '4px', background: p.color, flex: '0 0 auto' },
+        openLabel: `${open} open`,
+        chevStyle: { fontSize: '14px', color: 'rgba(255,255,255,.4)', transition: 'transform .2s', transform: s.expanded[p.id] ? 'rotate(180deg)' : 'none', display: 'inline-block' },
+        draft: s.drafts.todo[p.id] || '',
+        onToggle: () => this.setState((st) => ({ expanded: Object.assign({}, st.expanded, { [p.id]: !st.expanded[p.id] }) })),
+        onDraft: (e) => { const v = e.target.value; this.setState((st) => ({ drafts: Object.assign({}, st.drafts, { todo: Object.assign({}, st.drafts.todo, { [p.id]: v }) }) })); },
+        onKey: (e) => { if (e.key === 'Enter') this.addTodo(p.id); },
+        onAdd: () => this.addTodo(p.id),
+        todos: list.map((t) => ({
+          id: t.id, text: t.text, done: t.done, check: t.done ? '✓' : '',
+          onToggle: () => this.toggleTodo(p.id, t.id),
+          boxStyle: { width: '19px', height: '19px', borderRadius: '6px', flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#08080B', fontWeight: 700, background: t.done ? p.color : 'transparent', border: t.done ? `1px solid ${p.color}` : '1.5px solid rgba(255,255,255,.25)' },
+          textStyle: { fontSize: '13.5px', color: t.done ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.85)', textDecoration: t.done ? 'line-through' : 'none' },
+        })),
+      };
+    });
+
+    // reminders admin
+    const adminReminders = s.reminders.map((r) => ({
+      id: r.id, title: r.title,
+      sub: `${this.short(r.timeH, r.timeM)} ${this.ap(r.timeH)} · ${r.recur}`,
+      onToggle: () => this.setState((st) => ({ reminders: st.reminders.map((x) => x.id === r.id ? Object.assign({}, x, { enabled: !x.enabled }) : x) })),
+      onFire: () => this.fire(r),
+      toggleStyle: { width: '40px', height: '23px', borderRadius: '12px', border: 'none', cursor: 'pointer', padding: '2px', display: 'flex', background: r.enabled ? A : 'rgba(255,255,255,.15)', justifyContent: r.enabled ? 'flex-end' : 'flex-start', transition: 'all .2s' },
+      knobStyle: { width: '19px', height: '19px', borderRadius: '50%', background: '#fff', display: 'block' },
+    }));
+
+    // notes admin
+    const adminNotes = s.notes.map((n) => {
+      const proj = n.projectId ? this.state.projects.find((p) => p.id === n.projectId) : null;
+      return {
+        id: n.id, text: n.text,
+        tag: proj ? proj.name : 'General',
+        tagStyle: { fontSize: '11px', fontWeight: 600, padding: '3px 9px', borderRadius: '7px', color: proj ? '#fff' : 'rgba(255,255,255,.5)', background: proj ? this.hexA(proj.color, 0.22) : 'rgba(255,255,255,.06)' },
+        onDelete: () => this.setState((st) => ({ notes: st.notes.filter((x) => x.id !== n.id) })),
+      };
+    });
+
+    const projectOpts = this.state.projects.map((p) => ({ id: p.id, name: p.name }));
+    const dcSeg = (active) => active
+      ? { flex: 1, height: '38px', borderRadius: '10px', border: 'none', background: A, color: '#fff', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer' }
+      : { flex: 1, height: '38px', borderRadius: '10px', border: '1px solid rgba(255,255,255,.1)', background: 'rgba(255,255,255,.03)', color: 'rgba(255,255,255,.6)', fontWeight: 500, fontSize: '13.5px', cursor: 'pointer' };
+    const remModeBtn = (active) => active
+      ? { flex: 1, height: '34px', borderRadius: '9px', border: 'none', background: 'rgba(124,108,246,.2)', color: '#BCB2FF', fontWeight: 600, fontSize: '12.5px', cursor: 'pointer' }
+      : { flex: 1, height: '34px', borderRadius: '9px', border: '1px solid rgba(255,255,255,.1)', background: 'transparent', color: 'rgba(255,255,255,.5)', fontWeight: 500, fontSize: '12.5px', cursor: 'pointer' };
+
+    return {
+      // toolbar
+      isDisplay: s.surface === 'display', isAdmin: s.surface === 'admin',
+      showDisplay: () => this.setSurface('display'), showAdmin: () => this.setSurface('admin'),
+      tabDisplayStyle: seg(s.surface === 'display'), tabAdminStyle: seg(s.surface === 'admin'),
+      orientLandStyle: pill(isLandscape), orientPortStyle: pill(!isLandscape),
+      setLandscape: () => this.setState({ orientation: 'landscape' }), setPortrait: () => this.setState({ orientation: 'portrait' }),
+      // display chrome
+      displayFrameStyle, kioskHeaderStyle, headerRightStyle, displayBodyStyle, calWrapStyle, panelStyle, clockSize,
+      clockTime, clockSecs: this.pad(now.getSeconds()), clockAmpm: this.ap(now.getHours()), dateStr, syncLabel,
+      viewDay: () => this.setView('day'), viewWeek: () => this.setView('week'), viewMonth: () => this.setView('month'),
+      vDayStyle: vseg(s.view === 'day'), vWeekStyle: vseg(s.view === 'week'), vMonthStyle: vseg(s.view === 'month'),
+      isWeek: s.view === 'week', isDay: s.view === 'day', isMonth: s.view === 'month', showGrid: s.view !== 'month',
+      dayHeadLabel: now.toLocaleDateString('en-US', { weekday: 'long' }), dayHeadDate: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      weekDays, hours, gridHeight, gridEvents,
+      nowVisible, nowLineStyle, nowDotStyle,
+      monthLabel, dows, monthCells, miniCells,
+      // panel
+      surfacedVisible, surfacedProject: surfProj ? surfProj.name : '', surfacedItems,
+      hasNow, nowTitle: cur ? cur.title : '', nowRange: cur ? this.range(cur.sh, cur.sm, cur.eh, cur.em) : '', nowLeft: cur ? fmtLeft(nowLeftMin) : '',
+      hasNext, nextTitle: nxt ? nxt.title : '', nextTime: nxt ? `${this.short(nxt.sh, nxt.sm)} ${this.ap(nxt.sh)}` : '', nextRel: nxt ? fmtRel(nextRelMin) : '',
+      pomoColor, pomoRingStyle, pomoMMSS, pomoState: s.pomo.running ? 'Focus' : 'Paused', pomoLabel: s.pomo.label,
+      pomoToggle, pomoReset, pomoBtnLabel, pomoBtnStyle, pomoPresets,
+      noteSnippet: s.notes[0] ? s.notes[0].text : '',
+      // detail
+      hasSelected: !!sel, stop: (e) => { e.stopPropagation(); }, onCloseDetail: () => this.setState({ selectedId: null }),
+      detailTitle: sel ? sel.title : '', detailType: sel ? (sel.type === 'block' ? 'Focus block' : 'Meeting') : '',
+      detailDotStyle: { width: '14px', height: '14px', borderRadius: '4px', marginTop: '4px', flex: '0 0 auto', background: sel && sel.type === 'block' ? this.hexA(selColor, 0.3) : selColor, backgroundImage: sel && sel.type === 'block' ? `repeating-linear-gradient(45deg,${selColor} 0 3px,transparent 3px 6px)` : 'none', border: sel && sel.type === 'block' ? `1px solid ${selColor}` : 'none' },
+      detailTime: sel ? this.range(sel.sh, sel.sm, sel.eh, sel.em) : '', detailRecur: sel ? (sel.recur === 'None' ? 'Does not repeat' : sel.recur) : '',
+      detailHasProject: !!selProj, detailProject: selProj ? selProj.name : '',
+      detailProjStyle: { fontSize: '14px', fontWeight: 600, color: selProj ? selProj.color : '#fff' },
+      onEditFromDetail: () => { if (sel) { this.openEditor(sel); this.setState({ surface: 'admin', adminTab: 'calendar', selectedId: null }); } },
+      // reminder fire
+      reminderFiring: s.firing, onFire: () => this.fire(fireRem), onDismiss: () => this.setState({ firing: false }),
+      fireTitle: this._fireData ? this._fireData.title : fireRem.title, fireTime: this._fireData ? this._fireData.time : `${this.short(fireRem.timeH, fireRem.timeM)} ${this.ap(fireRem.timeH)}`,
+      // admin
+      navItems,
+      isTabCalendar: s.adminTab === 'calendar', isTabProjects: s.adminTab === 'projects', isTabReminders: s.adminTab === 'reminders', isTabNotes: s.adminTab === 'notes', isTabDisplay: s.adminTab === 'display',
+      adminEvents, hoverRow: { background: 'rgba(255,255,255,.05)' },
+      onNewEvent: () => this.openEditor(null),
+      editorOpen, listOpen: !editorOpen,
+      editorTitle: ed && ed.id ? 'Edit event' : 'New event', editCanDelete: !!(ed && ed.id),
+      editTitle: ed ? ed.title : '', editStart: ed ? ed.start : '09:00', editEnd: ed ? ed.end : '10:00', editRecur: ed ? ed.recur : 'None', editProject: ed ? ed.projectId : '',
+      typeMeetingStyle: tbtn(ed && ed.type === 'meeting', A), typeBlockStyle: tbtn(ed && ed.type === 'block', this.TEAL),
+      editShowLinkHint: !!(ed && ed.type === 'block' && ed.projectId),
+      editProjectSelectStyle: { height: '40px', padding: '0 11px', borderRadius: '10px', border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.04)', color: '#fff', fontSize: '14px' },
+      onEditTitle: (e) => this.editField('title', e.target.value),
+      onEditStart: (e) => this.editField('start', e.target.value),
+      onEditEnd: (e) => this.editField('end', e.target.value),
+      onEditRecur: (e) => this.editField('recur', e.target.value),
+      onEditProject: (e) => this.editField('projectId', e.target.value),
+      onTypeMeeting: () => this.editField('type', 'meeting'), onTypeBlock: () => this.editField('type', 'block'),
+      onSaveEvent: () => this.saveEvent(), onDeleteEvent: () => this.deleteEvent(), onCancelEdit: () => this.setState({ editor: null }),
+      recurOptions: ['None', 'Daily', 'Weekdays', 'Weekly', 'Monthly'],
+      // projects
+      adminProjects,
+      // reminders
+      adminReminders, remIsAbs: s.drafts.remMode === 'abs', remIsRel: s.drafts.remMode === 'rel',
+      remAbsStyle: remModeBtn(s.drafts.remMode === 'abs'), remRelStyle: remModeBtn(s.drafts.remMode === 'rel'),
+      remDraftTitle: s.drafts.remTitle, remDraftTime: s.drafts.remTime, remDraftMins: s.drafts.remMins, remDraftRecur: s.drafts.remRecur,
+      onRemTitle: (e) => this.draft('remTitle', e.target.value), onRemTime: (e) => this.draft('remTime', e.target.value), onRemMins: (e) => this.draft('remMins', e.target.value), onRemRecur: (e) => this.draft('remRecur', e.target.value),
+      onRemModeAbs: () => this.draft('remMode', 'abs'), onRemModeRel: () => this.draft('remMode', 'rel'),
+      onAddReminder: () => this.addReminder(),
+      // pomodoro presets already above
+      // notes
+      adminNotes, noteDraft: s.drafts.noteText, noteDraftPid: s.drafts.notePid,
+      onNoteDraft: (e) => this.draft('noteText', e.target.value), onNotePid: (e) => this.draft('notePid', e.target.value),
+      onAddNote: () => this.addNote(),
+      projectOpts,
+      // display & sync
+      dcDayStyle: dcSeg(s.view === 'day'), dcWeekStyle: dcSeg(s.view === 'week'), dcMonthStyle: dcSeg(s.view === 'month'),
+      dcLandStyle: dcSeg(isLandscape), dcPortStyle: dcSeg(!isLandscape),
+      googleConnected: s.googleConnected,
+      googleSub: s.googleConnected ? `Connected · synced ${syncLabel}` : 'Not connected',
+      googleSubStyle: { fontSize: '12.5px', color: s.googleConnected ? '#9FE3DE' : 'rgba(255,255,255,.45)', marginTop: '2px' },
+      googleBtnLabel: s.googleConnected ? 'Disconnect' : 'Connect Google',
+      googleBtnStyle: s.googleConnected
+        ? { height: '38px', padding: '0 16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.04)', color: 'rgba(255,255,255,.7)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }
+        : { height: '38px', padding: '0 16px', borderRadius: '10px', border: 'none', background: '#fff', color: '#222', fontWeight: 600, fontSize: '13px', cursor: 'pointer' },
+      onToggleGoogle: () => this.setState((st) => ({ googleConnected: !st.googleConnected, lastSyncMs: st.nowMs })),
+    };
+  }
+
+  fire(r) { this._fireData = { title: r.title, time: r.timeH != null ? `${this.short(r.timeH, r.timeM)} ${this.ap(r.timeH)}` : 'now' }; this.setState({ firing: true }); }
+  draft(k, v) { this.setState((st) => ({ drafts: Object.assign({}, st.drafts, { [k]: v }) })); }
+  addTodo(pid) {
+    const v = (this.state.drafts.todo[pid] || '').trim(); if (!v) return;
+    const id = 'td' + this.state.nextId;
+    this.setState((st) => ({
+      nextId: st.nextId + 1,
+      todos: Object.assign({}, st.todos, { [pid]: [...(st.todos[pid] || []), { id, text: v, done: false }] }),
+      drafts: Object.assign({}, st.drafts, { todo: Object.assign({}, st.drafts.todo, { [pid]: '' }) }),
+    }));
+  }
+  addNote() {
+    const v = this.state.drafts.noteText.trim(); if (!v) return;
+    const id = 'nt' + this.state.nextId;
+    this.setState((st) => ({ nextId: st.nextId + 1, notes: [{ id, text: v, projectId: st.drafts.notePid }, ...st.notes], drafts: Object.assign({}, st.drafts, { noteText: '', notePid: '' }) }));
+  }
+  addReminder() {
+    const t = this.state.drafts.remTitle.trim(); if (!t) return;
+    let h, m, recur = this.state.drafts.remRecur;
+    if (this.state.drafts.remMode === 'abs') { const p = (this.state.drafts.remTime || '18:00').split(':'); h = +p[0]; m = +p[1]; }
+    else { const d = new Date(this.state.nowMs + (+this.state.drafts.remMins || 25) * 60000); h = d.getHours(); m = d.getMinutes(); }
+    const id = 'rm' + this.state.nextId;
+    this.setState((st) => ({ nextId: st.nextId + 1, reminders: [...st.reminders, { id, title: t, timeH: h, timeM: m, recur, enabled: true }], drafts: Object.assign({}, st.drafts, { remTitle: '' }) }));
+  }
+  openEditor(ev) {
+    if (ev) this.setState({ editor: { id: ev.id, title: ev.title, type: ev.type, start: `${this.pad(ev.sh)}:${this.pad(ev.sm)}`, end: `${this.pad(ev.eh)}:${this.pad(ev.em)}`, recur: ev.recur, projectId: ev.projectId } });
+    else this.setState({ editor: { id: null, title: '', type: 'meeting', start: '09:00', end: '10:00', recur: 'None', projectId: '' } });
+  }
+  editField(k, v) { this.setState((st) => ({ editor: Object.assign({}, st.editor, { [k]: v }) })); }
+  saveEvent() {
+    const ed = this.state.editor; if (!ed || !ed.title.trim()) return;
+    const sp = ed.start.split(':'), ep = ed.end.split(':');
+    const data = { title: ed.title.trim(), type: ed.type, sh: +sp[0], sm: +sp[1], eh: +ep[0], em: +ep[1], recur: ed.recur, projectId: ed.projectId, color: ed.type === 'block' && ed.projectId === '' ? null : undefined };
+    this.setState((st) => {
+      let events;
+      if (ed.id) events = st.events.map((e) => e.id === ed.id ? Object.assign({}, e, data) : e);
+      else events = [...st.events, Object.assign({ id: 'ev' + st.nextId, day: this.todayIdx() }, data)];
+      return { events, nextId: st.nextId + 1, editor: null, lastSyncMs: st.nowMs };
+    });
+  }
+  deleteEvent() { const id = this.state.editor && this.state.editor.id; if (!id) return; this.setState((st) => ({ events: st.events.filter((e) => e.id !== id), editor: null })); }
+}
+</script>
+</body>
+</html>

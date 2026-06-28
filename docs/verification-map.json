@@ -1,0 +1,170 @@
+{
+  "_comment": "Bridge from requirement IDs to the tests that prove them. STATUS.md is generated from this file plus each package's test-results.json by scripts/verify-status.mjs. For auto* types, testMatch is an array of matchers; a matcher hits a test when BOTH its 'file' and 'name' substrings appear (file in the suite path, name in the test's full name). Matchers are OR'd. Nothing is implemented yet, so every auto* row currently reports 'No matching test' until its test exists.",
+  "requirements": [
+    {
+      "id": "FR-CAL-1",
+      "story": "US-CAL1",
+      "type": "auto+manual",
+      "verify": "OAuth flow exchanges code for tokens and persists them; manual check of the real Google consent screen.",
+      "testMatch": [{ "file": "api.integration", "name": "google connect stores tokens" }]
+    },
+    {
+      "id": "FR-CAL-2",
+      "story": "US-CAL1",
+      "type": "auto",
+      "verify": "First sync imports all events from the chosen calendar into the DB.",
+      "testMatch": [{ "file": "api.integration", "name": "initial sync imports events" }]
+    },
+    {
+      "id": "FR-CAL-3",
+      "story": "US-CAL2",
+      "type": "auto",
+      "verify": "Incremental sync applies Google changes using a stored sync token.",
+      "testMatch": [{ "file": "core", "name": "reconcile applies remote changes" }]
+    },
+    {
+      "id": "FR-CAL-4",
+      "story": "US-CAL2",
+      "type": "auto",
+      "verify": "Local create/edit produces the correct Google API write payload.",
+      "testMatch": [{ "file": "core", "name": "local change produces google push" }]
+    },
+    {
+      "id": "FR-CAL-5",
+      "story": "US-CAL2",
+      "type": "auto",
+      "verify": "Conflicting edits resolve to the newer updatedAt (last-write-wins).",
+      "testMatch": [{ "file": "core", "name": "last write wins" }]
+    },
+    {
+      "id": "FR-CAL-6",
+      "story": "US-CAL3",
+      "type": "auto+manual",
+      "verify": "Recurring events expand to occurrences for display; edits to recurrence are rejected.",
+      "testMatch": [{ "file": "core", "name": "recurrence expands occurrences" }]
+    },
+    {
+      "id": "FR-EVT-1",
+      "story": "US-EVT1",
+      "type": "auto",
+      "verify": "Event CRUD endpoints behave and scope to the single user.",
+      "testMatch": [{ "file": "api.integration", "name": "event crud" }]
+    },
+    {
+      "id": "FR-EVT-2",
+      "story": "US-EVT1",
+      "type": "auto",
+      "verify": "Event type is stored and validated (meeting | block).",
+      "testMatch": [{ "file": "shared", "name": "event type schema" }]
+    },
+    {
+      "id": "FR-VIEW-1",
+      "story": "US-VIEW1",
+      "type": "auto+review",
+      "verify": "Weekly view groups events into the correct day/time slots.",
+      "testMatch": [{ "file": "display", "name": "weekly view groups events" }]
+    },
+    {
+      "id": "FR-VIEW-2",
+      "story": "US-VIEW1",
+      "type": "manual",
+      "verify": "Manually verify portrait and landscape layouts on the 15.6\" screen."
+    },
+    {
+      "id": "FR-RT-1",
+      "story": "US-VIEW1",
+      "type": "auto",
+      "verify": "A data change emits a WebSocket message the display consumes.",
+      "testMatch": [{ "file": "api.integration", "name": "websocket pushes change" }]
+    },
+    {
+      "id": "FR-PROJ-1",
+      "story": "US-TODO1",
+      "type": "auto",
+      "verify": "Project CRUD endpoints behave.",
+      "testMatch": [{ "file": "api.integration", "name": "project crud" }]
+    },
+    {
+      "id": "FR-TODO-1",
+      "story": "US-TODO1",
+      "type": "auto",
+      "verify": "Todo CRUD with status, scoped to a project.",
+      "testMatch": [{ "file": "api.integration", "name": "todo crud" }]
+    },
+    {
+      "id": "FR-TODO-2",
+      "story": "US-TODO1",
+      "type": "auto",
+      "verify": "surfaceTodos(now, events, todos) returns a project's open todos only inside a linked block.",
+      "testMatch": [{ "file": "core", "name": "surface todos during linked block" }]
+    },
+    {
+      "id": "FR-REM-1",
+      "story": "US-REM1",
+      "type": "auto",
+      "verify": "Absolute-time reminder schedules a fire at the right instant.",
+      "testMatch": [{ "file": "core", "name": "absolute reminder fires" }]
+    },
+    {
+      "id": "FR-REM-2",
+      "story": "US-REM1",
+      "type": "auto",
+      "verify": "Relative reminder/timer computes the correct fire time from now.",
+      "testMatch": [{ "file": "core", "name": "relative timer fires" }]
+    },
+    {
+      "id": "FR-REM-3",
+      "story": "US-REM1",
+      "type": "auto",
+      "verify": "Recurring reminder computes the next occurrence after firing.",
+      "testMatch": [{ "file": "core", "name": "recurring reminder next occurrence" }]
+    },
+    {
+      "id": "FR-REM-4",
+      "story": "US-REM1",
+      "type": "auto+review",
+      "verify": "Fire event triggers a display takeover payload (and optional chime flag).",
+      "testMatch": [{ "file": "core", "name": "reminder fire payload" }]
+    },
+    {
+      "id": "FR-NOTE-1",
+      "story": "US-NOTE1",
+      "type": "auto",
+      "verify": "Note CRUD, general or linked to a project.",
+      "testMatch": [{ "file": "api.integration", "name": "note crud" }]
+    },
+    {
+      "id": "FR-VIEW-3",
+      "story": "US-VIEW2",
+      "type": "auto+review",
+      "verify": "Day and month view builders produce correct buckets; active view switch propagates.",
+      "testMatch": [{ "file": "display", "name": "day and month view" }]
+    },
+    {
+      "id": "NFR-REL-1",
+      "story": "US-NFR1",
+      "type": "auto",
+      "verify": "With Google unreachable, reads/writes still succeed against the local DB.",
+      "testMatch": [{ "file": "api.integration", "name": "works when google unreachable" }]
+    },
+    {
+      "id": "NFR-SEC-1",
+      "story": "US-NFR1",
+      "type": "review",
+      "verify": "Confirm admin is bound to the Tailscale interface and no public port is exposed; no login by design in v1."
+    },
+    {
+      "id": "NFR-PERF-1",
+      "story": "US-NFR1",
+      "type": "manual",
+      "verify": "Manually time an admin change appearing on the display (target ~1s)."
+    },
+    {
+      "id": "NFR-MAINT-1",
+      "story": "US-NFR1",
+      "type": "auto",
+      "verify": "core has no imports of node clock/IO/DB modules (purity guard test).",
+      "testMatch": [{ "file": "core", "name": "core stays pure" }]
+    }
+  ]
+}
