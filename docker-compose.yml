@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    container_name: dayboard-db
+    environment:
+      POSTGRES_USER: dayboard
+      POSTGRES_PASSWORD: dayboard
+      POSTGRES_DB: dayboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - dayboard-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dayboard"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dayboard-pgdata:

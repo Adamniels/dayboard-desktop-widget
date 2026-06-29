@@ -1,0 +1,41 @@
+// Wire schemas: zod derived from the Drizzle tables via drizzle-zod, with the
+// enum/union columns refined so validation matches the type contract. Used by the api
+// to validate REST payloads; the inferred types feed the frontends.
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
+import {
+  EVENT_TYPES,
+  REMINDER_KINDS,
+  TODO_STATUSES,
+  event,
+  eventOverride,
+  note,
+  project,
+  reminder,
+  todo,
+} from "../schema/index";
+
+export const eventSelectSchema = createSelectSchema(event);
+export const eventInsertSchema = createInsertSchema(event, {
+  type: z.enum(EVENT_TYPES),
+  timezone: z.string().min(1),
+});
+
+export const eventOverrideSelectSchema = createSelectSchema(eventOverride);
+export const eventOverrideInsertSchema = createInsertSchema(eventOverride);
+
+export const projectSelectSchema = createSelectSchema(project);
+export const projectInsertSchema = createInsertSchema(project);
+
+export const todoSelectSchema = createSelectSchema(todo);
+export const todoInsertSchema = createInsertSchema(todo, {
+  status: z.enum(TODO_STATUSES),
+});
+
+export const reminderSelectSchema = createSelectSchema(reminder);
+export const reminderInsertSchema = createInsertSchema(reminder, {
+  kind: z.enum(REMINDER_KINDS),
+});
+
+export const noteSelectSchema = createSelectSchema(note);
+export const noteInsertSchema = createInsertSchema(note);

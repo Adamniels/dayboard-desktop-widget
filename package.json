@@ -1,0 +1,30 @@
+{
+  "name": "dayboard",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.6.5",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "check": "pnpm -r run typecheck && pnpm -r run test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "gen:status": "node scripts/verify-status.mjs",
+    "test:gen": "node --test scripts/*.test.mjs",
+    "db:up": "docker compose up -d db",
+    "db:generate": "pnpm --filter @dayboard/api db:generate",
+    "db:migrate": "pnpm --filter @dayboard/api db:migrate"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript-eslint": "^8.26.0",
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  }
+}

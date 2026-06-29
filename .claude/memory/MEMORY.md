@@ -46,6 +46,7 @@ conversation.
 - [Generated STATUS never edited](conventions/generated-status-never-edit.md) — `docs/STATUS.md` comes from the generator only.
 - [Vertical slices](conventions/vertical-slices.md) — each feature is one thin end-to-end slice.
 - [Leave changes uncommitted](conventions/leave-changes-uncommitted.md) — Adam reviews and commits himself.
+- [Bundler module resolution](conventions/bundler-module-resolution.md) — "bundler" moduleResolution with extensionless internal imports; drizzle-kit drove it.
 
 ## Context
 
