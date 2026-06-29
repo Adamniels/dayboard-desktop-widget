@@ -17,3 +17,32 @@ export interface DisplayConfig {
   startHour: number;
   endHour: number;
 }
+
+export interface TodoDTO {
+  id: string;
+  projectId: string | null;
+  title: string;
+  status: "open" | "in_progress" | "done";
+  dueAt: string | null;
+}
+
+export interface NoteDTO {
+  id: string;
+  body: string;
+  projectId: string | null;
+}
+
+export interface TimerDTO {
+  id: string;
+  label: string | null;
+  mode: "countdown" | "pomodoro";
+  status: "running" | "paused" | "done";
+  phase: "work" | "short_break" | "long_break" | null;
+  endsAt: string | null;
+  remainingMs: number | null;
+  workMinutes: number | null;
+  breakMinutes: number | null;
+  longBreakMinutes: number | null;
+  cyclesDone: number;
+  cyclesTarget: number | null;
+}

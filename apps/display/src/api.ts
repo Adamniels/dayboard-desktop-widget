@@ -1,5 +1,5 @@
 // REST helpers for the display.
-import type { DisplayConfig, OccurrenceDTO } from "./types";
+import type { DisplayConfig, NoteDTO, OccurrenceDTO, TimerDTO, TodoDTO } from "./types";
 
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -13,6 +13,24 @@ export async function fetchOccurrences(from: Date, to: Date): Promise<Occurrence
   const url = `${BASE}/events?from=${from.toISOString()}&to=${to.toISOString()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`events ${res.status}`);
+  return res.json();
+}
+
+export async function fetchSurfaced(): Promise<TodoDTO[]> {
+  const res = await fetch(`${BASE}/surfaced`);
+  if (!res.ok) throw new Error(`surfaced ${res.status}`);
+  return res.json();
+}
+
+export async function fetchNotes(): Promise<NoteDTO[]> {
+  const res = await fetch(`${BASE}/notes`);
+  if (!res.ok) throw new Error(`notes ${res.status}`);
+  return res.json();
+}
+
+export async function fetchTimers(): Promise<TimerDTO[]> {
+  const res = await fetch(`${BASE}/timers`);
+  if (!res.ok) throw new Error(`timers ${res.status}`);
   return res.json();
 }
 

@@ -1,9 +1,26 @@
+import type { Todo } from "@dayboard/shared";
 import { describe, expect, it } from "vitest";
 import type { Occurrence } from "./occurrences";
-import { nowNext } from "./rules";
+import { type LinkedOccurrence, nowNext, surfaceTodos } from "./rules";
 
 function occ(startIso: string, endIso: string): Occurrence {
   return { start: new Date(startIso), end: new Date(endIso), isOverride: false, cancelled: false };
+}
+
+function linked(startIso: string, endIso: string, projectId: string | null): LinkedOccurrence {
+  return { ...occ(startIso, endIso), projectId };
+}
+
+function todo(partial: Partial<Todo> & Pick<Todo, "id" | "projectId">): Todo {
+  return {
+    title: "task",
+    status: "open",
+    dueAt: null,
+    completedAt: null,
+    createdAt: new Date("2026-06-01T00:00:00.000Z"),
+    updatedAt: new Date("2026-06-01T00:00:00.000Z"),
+    ...partial,
+  };
 }
 
 describe("nowNext", () => {
@@ -27,5 +44,34 @@ describe("nowNext", () => {
     const { current, next } = nowNext(new Date("2026-06-29T12:00:00.000Z"), occurrences);
     expect(current).toBeNull();
     expect(next?.start.toISOString()).toBe("2026-06-29T14:00:00.000Z");
+  });
+});
+
+// FR-TODO-2: the describe text contains "surface todos during linked block".
+describe("surface todos during linked block", () => {
+  const now = new Date("2026-06-29T14:30:00.000Z");
+  const insideP1 = linked("2026-06-29T14:00:00.000Z", "2026-06-29T15:00:00.000Z", "p1");
+  const elsewhere = linked("2026-06-29T09:00:00.000Z", "2026-06-29T10:00:00.000Z", "p2");
+
+  const todos = [
+    todo({ id: "a", projectId: "p1", status: "open", dueAt: new Date("2026-07-02T00:00:00.000Z") }),
+    todo({ id: "b", projectId: "p1", status: "open", dueAt: new Date("2026-07-01T00:00:00.000Z") }),
+    todo({ id: "c", projectId: "p1", status: "done" }),
+    todo({ id: "d", projectId: "p2", status: "open" }),
+  ];
+
+  it("returns the active project's open todos ordered by dueAt", () => {
+    const result = surfaceTodos(now, [insideP1, elsewhere], todos);
+    expect(result.map((t) => t.id)).toEqual(["b", "a"]); // earlier due first; done and p2 excluded
+  });
+
+  it("returns nothing when now is outside every linked event", () => {
+    const result = surfaceTodos(new Date("2026-06-29T20:00:00.000Z"), [insideP1, elsewhere], todos);
+    expect(result).toEqual([]);
+  });
+
+  it("ignores events with no project link", () => {
+    const unlinked = linked("2026-06-29T14:00:00.000Z", "2026-06-29T15:00:00.000Z", null);
+    expect(surfaceTodos(now, [unlinked], todos)).toEqual([]);
   });
 });

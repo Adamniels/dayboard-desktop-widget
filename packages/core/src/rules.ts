@@ -11,14 +11,30 @@ export interface LinkedOccurrence extends Occurrence {
 }
 
 /**
- * Phase 2 (FR-TODO-2): while `now` is inside an event linked to a project, return that
- * project's open todos to surface at the top of the display; otherwise an empty list.
+ * FR-TODO-2: while `now` is inside any event linked to a project, return that project's
+ * open todos to surface at the top of the display; otherwise an empty list. Open means a
+ * status other than "done". Ordered by dueAt (soonest first, undated last), then creation.
+ * Pure: `now` and the data are passed in.
  */
 export function surfaceTodos(now: Date, occurrences: LinkedOccurrence[], todos: Todo[]): Todo[] {
-  void now;
-  void occurrences;
-  void todos;
-  throw new Error("surfaceTodos: not implemented until Phase 2 (FR-TODO-2).");
+  const t = now.getTime();
+
+  const activeProjectIds = new Set<string>();
+  for (const o of occurrences) {
+    if (o.projectId && o.start.getTime() <= t && t < o.end.getTime()) {
+      activeProjectIds.add(o.projectId);
+    }
+  }
+  if (activeProjectIds.size === 0) return [];
+
+  return todos
+    .filter((td) => td.projectId !== null && activeProjectIds.has(td.projectId) && td.status !== "done")
+    .sort((a, b) => {
+      const ad = a.dueAt ? a.dueAt.getTime() : Number.POSITIVE_INFINITY;
+      const bd = b.dueAt ? b.dueAt.getTime() : Number.POSITIVE_INFINITY;
+      if (ad !== bd) return ad - bd;
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    });
 }
 
 /**

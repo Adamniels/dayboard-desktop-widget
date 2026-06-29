@@ -3,7 +3,7 @@
 // expose recurrence editing in v1.
 import { useEffect, useState } from "react";
 import { createEvent, getEvent, updateEvent } from "./api";
-import type { EventType } from "./types";
+import type { EventType, ProjectRow } from "./types";
 
 const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const TYPES: EventType[] = ["meeting", "block", "general"];
@@ -16,15 +16,17 @@ function isoToLocalInput(iso: string): string {
 
 interface Props {
   editingId: string | null;
+  projects: ProjectRow[];
   onSaved: () => void;
   onCancel: () => void;
 }
 
-export function EventEditor({ editingId, onSaved, onCancel }: Props) {
+export function EventEditor({ editingId, projects, onSaved, onCancel }: Props) {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<EventType>("block");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [projectId, setProjectId] = useState<string>("");
   const [recurringLocked, setRecurringLocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +36,7 @@ export function EventEditor({ editingId, onSaved, onCancel }: Props) {
       setType("block");
       setStart("");
       setEnd("");
+      setProjectId("");
       setRecurringLocked(false);
       return;
     }
@@ -42,6 +45,7 @@ export function EventEditor({ editingId, onSaved, onCancel }: Props) {
       setType(ev.type);
       setStart(isoToLocalInput(ev.start));
       setEnd(isoToLocalInput(ev.end));
+      setProjectId(ev.projectId ?? "");
       setRecurringLocked(ev.recurrence != null && ev.googleEventId != null);
     });
   }, [editingId]);
@@ -54,6 +58,7 @@ export function EventEditor({ editingId, onSaved, onCancel }: Props) {
       start: new Date(start).toISOString(),
       end: new Date(end).toISOString(),
       timezone: LOCAL_TZ,
+      projectId: projectId || null,
     };
     try {
       if (new Date(payload.end) <= new Date(payload.start)) {
@@ -94,9 +99,20 @@ export function EventEditor({ editingId, onSaved, onCancel }: Props) {
         Start
         <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} style={{ width: "100%", padding: 6 }} />
       </label>
-      <label style={{ display: "block", marginBottom: 12 }}>
+      <label style={{ display: "block", marginBottom: 8 }}>
         End
         <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} style={{ width: "100%", padding: 6 }} />
+      </label>
+      <label style={{ display: "block", marginBottom: 12 }}>
+        Project (links this event for todo surfacing)
+        <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ width: "100%", padding: 6 }}>
+          <option value="">None</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
       </label>
       {error && <p style={{ color: "#c0392b", fontSize: 13 }}>{error}</p>}
       <div style={{ display: "flex", gap: 8 }}>

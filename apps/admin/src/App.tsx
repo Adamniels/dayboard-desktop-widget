@@ -1,15 +1,21 @@
 // Admin root: the connection status, the week's events, and the event editor. This is the
 // control surface Adam reaches over Tailscale; the display never talks to it directly.
 import { useCallback, useEffect, useState } from "react";
-import { deleteEvent, getCalendars, getSyncStatus, listOccurrences, weekWindow } from "./api";
+import { deleteEvent, getCalendars, getProjects, getSyncStatus, listOccurrences, weekWindow } from "./api";
 import { EventEditor } from "./EventEditor";
-import type { CalendarInfo, OccurrenceDTO, SyncStatus } from "./types";
+import { Planning } from "./Planning";
+import type { CalendarInfo, OccurrenceDTO, ProjectRow, SyncStatus } from "./types";
 
 export function App() {
   const [occurrences, setOccurrences] = useState<OccurrenceDTO[]>([]);
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [calendars, setCalendars] = useState<CalendarInfo[]>([]);
+  const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [editing, setEditing] = useState<{ id: string | null } | null>(null);
+
+  const loadProjects = useCallback(() => {
+    getProjects().then(setProjects).catch(() => setProjects([]));
+  }, []);
 
   const refresh = useCallback(async () => {
     const { from, to } = weekWindow(new Date());
@@ -21,7 +27,8 @@ export function App() {
     setOccurrences(occ);
     setStatus(st);
     setCalendars(cals);
-  }, []);
+    loadProjects();
+  }, [loadProjects]);
 
   useEffect(() => {
     void refresh();
@@ -75,6 +82,7 @@ export function App() {
           <section style={{ flex: "0 1 440px" }}>
             <EventEditor
               editingId={editing.id}
+              projects={projects}
               onSaved={() => {
                 setEditing(null);
                 void refresh();
@@ -84,6 +92,8 @@ export function App() {
           </section>
         )}
       </div>
+
+      <Planning projects={projects} onProjectsChanged={loadProjects} />
     </div>
   );
 }

@@ -6,7 +6,10 @@ import Fastify from "fastify";
 import { env } from "./env";
 import { eventRoutes } from "./routes/events";
 import { metaRoutes } from "./routes/meta";
+import { planningRoutes } from "./routes/planning";
+import { reminderRoutes } from "./routes/reminders";
 import { startSyncLoop } from "./sync/engine";
+import { startScheduler } from "./scheduler/engine";
 import { addClient, clientCount } from "./ws";
 
 export async function buildServer() {
@@ -22,6 +25,8 @@ export async function buildServer() {
 
   await app.register(eventRoutes);
   await app.register(metaRoutes);
+  await app.register(planningRoutes);
+  await app.register(reminderRoutes);
 
   // Connection only in Phase 0: accept the socket, track it, log it. Nothing is pushed.
   app.register(async (instance) => {
@@ -38,9 +43,11 @@ async function main() {
   const app = await buildServer();
   try {
     await app.listen({ port: env.port, host: "0.0.0.0" });
-    // Start the Google poll loop after the server is up. Started here (not in
-    // buildServer) so integration tests can build the app without a live poller.
+    // Start the Google poll loop and the reminder/timer scheduler after the server is up.
+    // Started here (not in buildServer) so integration tests can build the app without
+    // live background loops.
     startSyncLoop(app.log);
+    void startScheduler(app.log);
   } catch (err) {
     app.log.error(err);
     process.exit(1);

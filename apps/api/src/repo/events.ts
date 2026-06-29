@@ -20,6 +20,73 @@ export interface OccurrenceDTO {
   googleEventId: string | null;
 }
 
+/** A raw occurrence with Date instants (the surfacing rule needs Dates, not ISO strings). */
+export interface RawOccurrence {
+  eventId: string;
+  title: string;
+  type: Event["type"];
+  projectId: string | null;
+  start: Date;
+  end: Date;
+  isOverride: boolean;
+  recurring: boolean;
+  googleEventId: string | null;
+}
+
+/** Expand events overlapping [from, to) into raw occurrences (Date instants). */
+export async function listOccurrencesRaw(from: Date, to: Date, now: Date): Promise<RawOccurrence[]> {
+  const rows = await db
+    .select()
+    .from(event)
+    .where(
+      and(
+        isNull(event.deletedAt),
+        or(isNotNull(event.recurrence), and(lt(event.start, to), gt(event.end, from))),
+      ),
+    );
+  if (rows.length === 0) return [];
+
+  const overrideRows = await db
+    .select()
+    .from(eventOverride)
+    .where(
+      inArray(
+        eventOverride.eventId,
+        rows.map((r) => r.id),
+      ),
+    );
+  const overridesByEvent = new Map<string, OccurrenceOverride[]>();
+  for (const o of overrideRows) {
+    const list = overridesByEvent.get(o.eventId) ?? [];
+    list.push({ occurrenceStart: o.occurrenceStart, cancelled: o.cancelled, start: o.start, end: o.end });
+    overridesByEvent.set(o.eventId, list);
+  }
+
+  const out: RawOccurrence[] = [];
+  for (const row of rows) {
+    const occurrences = expandOccurrences(
+      { start: row.start, end: row.end, timezone: row.timezone, rrule: row.recurrence, overrides: overridesByEvent.get(row.id) },
+      { from, to },
+      now,
+    );
+    for (const occ of occurrences) {
+      out.push({
+        eventId: row.id,
+        title: row.title,
+        type: row.type,
+        projectId: row.projectId,
+        start: occ.start,
+        end: occ.end,
+        isOverride: occ.isOverride,
+        recurring: row.recurrence !== null,
+        googleEventId: row.googleEventId,
+      });
+    }
+  }
+  out.sort((a, b) => a.start.getTime() - b.start.getTime());
+  return out;
+}
+
 /** Expand all events overlapping [from, to) into occurrences, in start order. */
 export async function listOccurrences(from: Date, to: Date, now: Date): Promise<OccurrenceDTO[]> {
   // Single events filtered by overlap; recurring masters always loaded (their occurrences

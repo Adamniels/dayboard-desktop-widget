@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   EVENT_TYPES,
   REMINDER_KINDS,
+  TIMER_MODES,
   TODO_STATUSES,
   event,
   eventOverride,
@@ -14,6 +15,7 @@ import {
   note,
   project,
   reminder,
+  timer,
   todo,
 } from "../schema/index";
 
@@ -37,6 +39,11 @@ export const todoInsertSchema = createInsertSchema(todo, {
 export const reminderSelectSchema = createSelectSchema(reminder);
 export const reminderInsertSchema = createInsertSchema(reminder, {
   kind: z.enum(REMINDER_KINDS),
+});
+
+export const timerSelectSchema = createSelectSchema(timer);
+export const timerInsertSchema = createInsertSchema(timer, {
+  mode: z.enum(TIMER_MODES),
 });
 
 export const noteSelectSchema = createSelectSchema(note);

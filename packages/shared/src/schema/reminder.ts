@@ -15,6 +15,10 @@ export const reminder = pgTable("reminder", {
   offsetMinutes: integer("offset_minutes"),
   recurrence: text("recurrence"),
   chime: boolean("chime").notNull().default(false),
+  // A reminder can be paused without deleting it (the prototype's toggle).
+  enabled: boolean("enabled").notNull().default(true),
+  // For recurring reminders, the last fire, so the next occurrence advances past it.
+  lastFiredAt: timestamp("last_fired_at", { withTimezone: true, mode: "date" }),
   projectId: uuid("project_id").references(() => project.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),

@@ -7,6 +7,7 @@ import type {
   note,
   project,
   reminder,
+  timer,
   todo,
 } from "./schema/index";
 
@@ -33,3 +34,6 @@ export type NewGoogleCredential = typeof googleCredential.$inferInsert;
 
 export type GoogleCalendar = typeof googleCalendar.$inferSelect;
 export type NewGoogleCalendar = typeof googleCalendar.$inferInsert;
+
+export type Timer = typeof timer.$inferSelect;
+export type NewTimer = typeof timer.$inferInsert;
