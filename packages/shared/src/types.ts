@@ -2,6 +2,8 @@
 import type {
   event,
   eventOverride,
+  googleCalendar,
+  googleCredential,
   note,
   project,
   reminder,
@@ -25,3 +27,9 @@ export type NewReminder = typeof reminder.$inferInsert;
 
 export type Note = typeof note.$inferSelect;
 export type NewNote = typeof note.$inferInsert;
+
+export type GoogleCredential = typeof googleCredential.$inferSelect;
+export type NewGoogleCredential = typeof googleCredential.$inferInsert;
+
+export type GoogleCalendar = typeof googleCalendar.$inferSelect;
+export type NewGoogleCalendar = typeof googleCalendar.$inferInsert;

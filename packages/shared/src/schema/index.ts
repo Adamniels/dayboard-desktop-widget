@@ -5,3 +5,4 @@ export * from "./event";
 export * from "./todo";
 export * from "./reminder";
 export * from "./note";
+export * from "./google";

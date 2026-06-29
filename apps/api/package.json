@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "google:connect": "tsx src/scripts/google-connect.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "db:generate": "drizzle-kit generate",
@@ -15,11 +16,15 @@
   "dependencies": {
     "@dayboard/core": "workspace:*",
     "@dayboard/shared": "workspace:*",
+    "@fastify/cors": "^10.0.2",
     "@fastify/websocket": "^11.0.2",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.0",
     "fastify": "^5.2.1",
-    "pg": "^8.13.3"
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^144.0.0",
+    "pg": "^8.13.3",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/pg": "^8.11.11",

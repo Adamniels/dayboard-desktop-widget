@@ -8,8 +8,10 @@ export default tseslint.config(
   },
   ...tseslint.configs.recommended,
   {
-    // Purity boundary for the pure domain package.
+    // Purity boundary for the pure domain package. Test files are exempt: the purity
+    // guard test itself reads the source tree with node:fs.
     files: ["packages/core/src/**/*.ts"],
+    ignores: ["packages/core/src/**/*.test.ts"],
     rules: {
       "no-restricted-imports": [
         "error",

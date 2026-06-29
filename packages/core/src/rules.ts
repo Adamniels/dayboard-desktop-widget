@@ -22,13 +22,25 @@ export function surfaceTodos(now: Date, occurrences: LinkedOccurrence[], todos: 
 }
 
 /**
- * Phase 1/2: derive the current and next occurrence for the now line and now/next card.
+ * Derive the current and next occurrence for the now line and now/next card (lifted from
+ * the prototype). `current` is the occurrence containing `now`; `next` is the soonest
+ * occurrence that starts after `now`. Pure: `now` is passed in.
  */
 export function nowNext(
   now: Date,
   occurrences: Occurrence[],
 ): { current: Occurrence | null; next: Occurrence | null } {
-  void now;
-  void occurrences;
-  throw new Error("nowNext: not implemented until Phase 1.");
+  const t = now.getTime();
+  const sorted = [...occurrences].sort((a, b) => a.start.getTime() - b.start.getTime());
+
+  let current: Occurrence | null = null;
+  let next: Occurrence | null = null;
+  for (const o of sorted) {
+    if (o.start.getTime() <= t && t < o.end.getTime()) {
+      current = o;
+    } else if (o.start.getTime() > t && next === null) {
+      next = o;
+    }
+  }
+  return { current, next };
 }

@@ -1,9 +1,19 @@
 // Pure recurrence expansion. No clock, no IO: every instant is passed in
 // (see .claude/memory/decisions/datetime-recurrence-model.md and core-stays-pure).
 //
-// Phase 0 ships the minimal non-recurring path with one smoke test. Real RFC 5545
-// RRULE expansion and override application arrive in Phase 1 (FR-CAL-6), via the
-// `rrule` library, behind this same signature.
+// Recurrence is an RFC 5545 RRULE string, expanded with the pure `rrule` library and
+// anchored at the event start. v1 expands relative to the start instant; occurrences keep
+// the event's duration. A known v1 simplification: wall-clock time can shift by an hour
+// across a DST boundary because expansion is offset-based, not timezone-aware. This is
+// acceptable for read-only Google recurrence display; timezone-aware expansion (rrule +
+// a tz library) is a later refinement if it ever bites.
+// rrule ships as CommonJS. Bundlers (Vite, esbuild/vitest) expose its named exports, but
+// Node's ESM loader only reaches them through the default. Read from the namespace and
+// fall back to default so the same code works in the browser, under tsx, and in tests.
+import * as rruleNs from "rrule";
+
+const rrulestr =
+  rruleNs.rrulestr ?? (rruleNs as unknown as { default: { rrulestr: typeof rruleNs.rrulestr } }).default.rrulestr;
 
 /** A recurrence exception, keyed by the original occurrence instant. */
 export interface OccurrenceOverride {
@@ -42,37 +52,49 @@ function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
   return aStart.getTime() < bEnd.getTime() && aEnd.getTime() > bStart.getTime();
 }
 
+/** Build the recurrence start instants that could overlap the window. */
+function recurringStarts(input: RecurrenceInput, window: Window, durationMs: number): Date[] {
+  const ruleText = input.rrule!.startsWith("RRULE:") ? input.rrule! : `RRULE:${input.rrule!}`;
+  const rule = rrulestr(ruleText, { dtstart: input.start });
+  // Widen the lower bound by the duration so an occurrence that starts before the window
+  // but is still running inside it is included.
+  const after = new Date(window.from.getTime() - durationMs);
+  return rule.between(after, window.to, true);
+}
+
 /**
  * Expand an event into concrete occurrences within `window`.
  *
- * `now` is part of the settled contract (it anchors relative/now-aware rules lifted
- * from the prototype later) and is threaded through even though the Phase 0 minimal
- * path does not branch on it yet.
+ * `now` is part of the settled contract (it anchors relative/now-aware rules lifted from
+ * the prototype) and is threaded through; the expansion itself is independent of it.
  */
 export function expandOccurrences(
   input: RecurrenceInput,
   window: Window,
   now: Date,
 ): Occurrence[] {
-  // Reserved for Phase 1+ now-aware expansion; referenced so the contract is explicit.
   void now;
 
-  if (input.rrule !== null) {
-    throw new Error(
-      "expandOccurrences: RRULE expansion lands in Phase 1 (FR-CAL-6); Phase 0 handles single events only.",
-    );
+  const durationMs = input.end.getTime() - input.start.getTime();
+  const overridesByTime = new Map<number, OccurrenceOverride>();
+  for (const o of input.overrides ?? []) {
+    overridesByTime.set(o.occurrenceStart.getTime(), o);
   }
 
-  if (!overlaps(input.start, input.end, window.from, window.to)) {
-    return [];
+  const starts = input.rrule === null ? [input.start] : recurringStarts(input, window, durationMs);
+
+  const occurrences: Occurrence[] = [];
+  for (const occurrenceStart of starts) {
+    const override = overridesByTime.get(occurrenceStart.getTime());
+    if (override?.cancelled) continue;
+
+    const start = override?.start ?? occurrenceStart;
+    const end = override?.end ?? new Date(occurrenceStart.getTime() + durationMs);
+    if (!overlaps(start, end, window.from, window.to)) continue;
+
+    occurrences.push({ start, end, isOverride: override != null, cancelled: false });
   }
 
-  return [
-    {
-      start: input.start,
-      end: input.end,
-      isOverride: false,
-      cancelled: false,
-    },
-  ];
+  occurrences.sort((a, b) => a.start.getTime() - b.start.getTime());
+  return occurrences;
 }

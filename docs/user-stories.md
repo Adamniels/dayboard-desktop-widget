@@ -9,8 +9,9 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
 **Covers:** FR-CAL-1, FR-CAL-2, FR-VIEW-1
 
 - **Given** I have not connected a Google account
-- **When** I connect one from the admin app and pick a calendar
-- **Then** all its events import into the app and appear in the weekly view on the
+- **When** I connect one with the setup script (`pnpm --filter @dayboard/api
+  google:connect`) and pick which calendars to sync
+- **Then** all their events import into the app and appear in the weekly view on the
   display.
 
 ### US-CAL2 — My two worlds stay in sync

@@ -9,6 +9,8 @@ import {
   TODO_STATUSES,
   event,
   eventOverride,
+  googleCalendar,
+  googleCredential,
   note,
   project,
   reminder,
@@ -39,3 +41,9 @@ export const reminderInsertSchema = createInsertSchema(reminder, {
 
 export const noteSelectSchema = createSelectSchema(note);
 export const noteInsertSchema = createInsertSchema(note);
+
+export const googleCredentialSelectSchema = createSelectSchema(googleCredential);
+export const googleCredentialInsertSchema = createInsertSchema(googleCredential);
+
+export const googleCalendarSelectSchema = createSelectSchema(googleCalendar);
+export const googleCalendarInsertSchema = createInsertSchema(googleCalendar);

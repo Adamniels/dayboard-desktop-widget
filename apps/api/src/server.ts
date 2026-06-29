@@ -1,16 +1,27 @@
 // Minimal Phase 0 api: a health route and an empty WebSocket endpoint. No business
 // endpoints yet; Phase 1 adds REST CRUD and the live broadcast over this same channel.
+import cors from "@fastify/cors";
 import websocket from "@fastify/websocket";
 import Fastify from "fastify";
 import { env } from "./env";
+import { eventRoutes } from "./routes/events";
+import { metaRoutes } from "./routes/meta";
+import { startSyncLoop } from "./sync/engine";
 import { addClient, clientCount } from "./ws";
 
 export async function buildServer() {
   const app = Fastify({ logger: true });
 
+  // The display and admin are served from different origins (Vite on 5173/5174, or the
+  // Tailscale host on the Mini), so the browser needs CORS to read api responses. Single
+  // user behind Tailscale: reflecting any origin is acceptable here.
+  await app.register(cors, { origin: true });
   await app.register(websocket);
 
   app.get("/health", async () => ({ status: "ok", clients: clientCount() }));
+
+  await app.register(eventRoutes);
+  await app.register(metaRoutes);
 
   // Connection only in Phase 0: accept the socket, track it, log it. Nothing is pushed.
   app.register(async (instance) => {
@@ -27,6 +38,9 @@ async function main() {
   const app = await buildServer();
   try {
     await app.listen({ port: env.port, host: "0.0.0.0" });
+    // Start the Google poll loop after the server is up. Started here (not in
+    // buildServer) so integration tests can build the app without a live poller.
+    startSyncLoop(app.log);
   } catch (err) {
     app.log.error(err);
     process.exit(1);

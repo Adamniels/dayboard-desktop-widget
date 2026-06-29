@@ -20,4 +20,18 @@ function required(name: string): string {
 export const env = {
   databaseUrl: required("DATABASE_URL"),
   port: Number(process.env.API_PORT ?? 3000),
+  // Timezone the display positions events in. Explicit DISPLAY_TZ wins; otherwise the
+  // Mini's system timezone (decision 2 in the Phase 1 plan).
+  displayTimezone:
+    process.env.DISPLAY_TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC",
+  startHour: Number(process.env.DISPLAY_START_HOUR ?? 7),
+  endHour: Number(process.env.DISPLAY_END_HOUR ?? 21),
+  // Google poll interval (decision 4: 45s).
+  syncIntervalMs: Number(process.env.SYNC_INTERVAL_MS ?? 45_000),
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    // Loopback redirect used by the one-off google:connect CLI.
+    redirectUri: process.env.GOOGLE_REDIRECT_URI ?? "http://127.0.0.1:53682/oauth2callback",
+  },
 } as const;

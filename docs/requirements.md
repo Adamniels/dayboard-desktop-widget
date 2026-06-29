@@ -27,8 +27,10 @@ live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
 
 ### FR-EVT — Events
 - **FR-EVT-1** Adam shall create, read, update, and delete events from the admin app.
-- **FR-EVT-2** Each event shall carry a `type` (at least `meeting` and `block`), where
-  a time block is an event reserved for focused work rather than a meeting.
+- **FR-EVT-2** Each event shall carry a `type` of `meeting`, `block`, or `general`, where
+  a time block is an event reserved for focused work rather than a meeting, and `general`
+  is the default applied to events imported from Google (which has no meeting/block
+  concept).
 
 ### FR-VIEW — Display views
 - **FR-VIEW-1** The display shall show a weekly view of events by default.

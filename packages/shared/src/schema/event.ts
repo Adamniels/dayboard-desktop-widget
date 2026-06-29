@@ -3,7 +3,9 @@ import { project } from "./project";
 
 // Event kinds. Extend Dayboard by adding a kind here, never a new table
 // (see .claude/memory/decisions/unified-event-model.md).
-export const EVENT_TYPES = ["meeting", "block"] as const;
+// `general` is the default for events imported from Google (which has no meeting/block
+// concept); Adam retypes to meeting or block in admin.
+export const EVENT_TYPES = ["meeting", "block", "general"] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
 // The unified Event. Time is absolute (timestamptz, stored UTC) plus an explicit
@@ -22,6 +24,14 @@ export const event = pgTable("event", {
   recurrence: text("recurrence"),
   googleEventId: text("google_event_id"),
   googleCalendarId: text("google_calendar_id"),
+  // Sync bookkeeping (Phase 1). googleEtag is Google's ETag for cheap change detection;
+  // lastSyncedAt marks the last reconcile (updatedAt > lastSyncedAt means a pending local
+  // push); googleUpdatedAt is the remote side of last-write-wins; deletedAt is a soft-delete
+  // tombstone so deletions propagate to Google without losing the link.
+  googleEtag: text("google_etag"),
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true, mode: "date" }),
+  googleUpdatedAt: timestamp("google_updated_at", { withTimezone: true, mode: "date" }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "date" }),
   projectId: uuid("project_id").references(() => project.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   // updatedAt drives last-write-wins for Google sync.

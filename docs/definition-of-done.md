@@ -18,7 +18,7 @@ off by Adam.
 | FR-CAL-5 | US-CAL2 | Conflict resolves last-write-wins by updatedAt | Auto | Todo |
 | FR-CAL-6 | US-CAL3 | Recurrence expands to occurrences; edits rejected | Auto + Manual | Todo |
 | FR-EVT-1 | US-EVT1 | Event CRUD endpoints, single-user scoped | Auto | Todo |
-| FR-EVT-2 | US-EVT1 | Event type validated (meeting \| block) | Auto | Todo |
+| FR-EVT-2 | US-EVT1 | Event type validated (meeting \| block \| general) | Auto | Todo |
 | FR-VIEW-1 | US-VIEW1 | Weekly view groups events correctly | Auto + Review | Todo |
 | FR-VIEW-2 | US-VIEW1 | Portrait and landscape verified on device | Manual | Todo |
 | FR-RT-1 | US-VIEW1 | Data change emits WebSocket message | Auto | Todo |
