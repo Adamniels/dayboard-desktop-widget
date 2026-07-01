@@ -1,13 +1,15 @@
-// Display root: fetches the week, surfaced todos, notes, and the running timer; refetches
-// on WebSocket changes (FR-RT-1); shows a takeover on reminder/timer fires (FR-REM-4); and
-// renders the weekly view plus side panel in the screen's orientation (FR-VIEW-2).
+// Display root: fetches config + per-view occurrences and the panel data, tracks the live
+// socket, and feeds it all into the presentational DisplayShell. Refetches on WebSocket
+// changes — including `display.changed`, which flips the view live (FR-RT-1, FR-VIEW-3) — and
+// shows a takeover on reminder/timer fires (FR-REM-4). Orientation-aware (FR-VIEW-2).
 import { useCallback, useEffect, useState } from "react";
-import { fetchConfig, fetchNotes, fetchOccurrences, fetchSurfaced, fetchTimers, weekWindow } from "./api";
-import { SidePanel } from "./SidePanel";
+import { fetchConfig, fetchNotes, fetchOccurrences, fetchSurfaced, fetchTimers, windowForView } from "./api";
+import { DisplayShell } from "./DisplayShell";
 import { Takeover, type TakeoverContent } from "./Takeover";
 import type { DisplayConfig, NoteDTO, OccurrenceDTO, TimerDTO, TodoDTO } from "./types";
 import { useDisplaySocket, type SocketMessage } from "./useDisplaySocket";
-import { WeekView } from "./WeekView";
+
+const DEFAULT_CONFIG: DisplayConfig = { timezone: "UTC", startHour: 7, endHour: 21, activeView: "week" };
 
 export function App() {
   const [config, setConfig] = useState<DisplayConfig | null>(null);
@@ -19,8 +21,12 @@ export function App() {
   const [now, setNow] = useState(() => new Date());
   const [landscape, setLandscape] = useState(() => window.innerWidth >= window.innerHeight);
 
-  const refetch = useCallback(async () => {
-    const { from, to } = weekWindow(new Date());
+  // Reload config first (so a view switch is honored), then occurrences for that view's
+  // window plus the panel data. Refetching config each cycle is cheap and keeps the window
+  // centered on now across day/month rollovers.
+  const reload = useCallback(async () => {
+    const cfg = await fetchConfig().catch(() => DEFAULT_CONFIG);
+    const { from, to } = windowForView(cfg.activeView, new Date());
     try {
       const [occ, surf, ns, timers] = await Promise.all([
         fetchOccurrences(from, to),
@@ -28,12 +34,13 @@ export function App() {
         fetchNotes().catch(() => []),
         fetchTimers().catch(() => []),
       ]);
+      setConfig(cfg);
       setOccurrences(occ);
       setSurfaced(surf);
       setNotes(ns);
       setTimer(timers.find((t) => t.status !== "done") ?? null);
     } catch {
-      // keep last data if the api is briefly unreachable
+      setConfig(cfg);
     }
   }, []);
 
@@ -45,28 +52,27 @@ export function App() {
       } else if (msg.type === "timer.fired") {
         const t = msg.timer as TimerDTO | null;
         setTakeover({ title: t?.phase === "work" ? "Break time" : "Back to focus", chime: Boolean(msg.chime) });
-        void refetch();
+        void reload();
       } else if (msg.type === "timer.updated") {
         const t = msg.timer as TimerDTO | null;
         setTimer(t && t.status !== "done" ? t : null);
       } else {
-        // events/projects/todos/notes changed
-        void refetch();
+        // events/projects/todos/notes changed, or display.changed (the active view switched)
+        void reload();
       }
     },
-    [refetch],
+    [reload],
   );
 
   const status = useDisplaySocket(onMessage);
 
   useEffect(() => {
-    fetchConfig().then(setConfig).catch(() => setConfig({ timezone: "UTC", startHour: 7, endHour: 21 }));
-    void refetch();
-  }, [refetch]);
+    void reload();
+  }, [reload]);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 1000);
-    const minute = setInterval(() => void refetch(), 60_000);
+    const minute = setInterval(() => void reload(), 60_000);
     const onResize = () => setLandscape(window.innerWidth >= window.innerHeight);
     window.addEventListener("resize", onResize);
     return () => {
@@ -74,40 +80,21 @@ export function App() {
       clearInterval(minute);
       window.removeEventListener("resize", onResize);
     };
-  }, [refetch]);
+  }, [reload]);
 
   return (
-    <div style={{ height: "100vh", background: "#161118", fontFamily: "system-ui", display: "flex", flexDirection: "column" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", color: "#EDEAF2" }}>
-        <h1 style={{ fontSize: landscape ? 22 : 18, margin: 0 }}>
-          {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-        </h1>
-        <span style={{ fontSize: 12, color: status === "open" ? "#3FB8AF" : "#FF6B6B" }}>
-          {status === "open" ? "live" : "reconnecting"}
-        </span>
-      </header>
-      <main
-        style={{
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: landscape ? "row" : "column",
-          gap: 14,
-          padding: landscape ? "0 18px 18px" : "0 12px 12px",
-        }}
-      >
-        <div style={{ flex: landscape ? 1 : "1 1 54%", minHeight: 0 }}>
-          {config ? (
-            <WeekView config={config} occurrences={occurrences} now={now} landscape={landscape} />
-          ) : (
-            <p style={{ color: "#EDEAF2", padding: 20 }}>Loading…</p>
-          )}
-        </div>
-        <div style={{ width: landscape ? 320 : "auto", flex: landscape ? "0 0 320px" : "1 1 46%", minHeight: 0 }}>
-          <SidePanel surfaced={surfaced} timer={timer} notes={notes} now={now} />
-        </div>
-      </main>
+    <>
+      <DisplayShell
+        config={config ?? DEFAULT_CONFIG}
+        occurrences={occurrences}
+        surfaced={surfaced}
+        notes={notes}
+        timer={timer}
+        now={now}
+        landscape={landscape}
+        connection={status}
+      />
       {takeover && <Takeover content={takeover} onDismiss={() => setTakeover(null)} />}
-    </div>
+    </>
   );
 }

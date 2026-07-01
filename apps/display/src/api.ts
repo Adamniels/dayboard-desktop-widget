@@ -1,5 +1,5 @@
 // REST helpers for the display.
-import type { DisplayConfig, NoteDTO, OccurrenceDTO, TimerDTO, TodoDTO } from "./types";
+import type { DisplayConfig, DisplayView, NoteDTO, OccurrenceDTO, TimerDTO, TodoDTO } from "./types";
 
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -42,4 +42,31 @@ export function weekWindow(now: Date): { from: Date; to: Date } {
   const to = new Date(from);
   to.setDate(to.getDate() + 7);
   return { from, to };
+}
+
+/** Today 00:00 through tomorrow 00:00 (local time). The day view shows only today. */
+export function dayWindow(now: Date): { from: Date; to: Date } {
+  const from = new Date(now);
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(from);
+  to.setDate(to.getDate() + 1);
+  return { from, to };
+}
+
+/** The 42-cell month grid range: the Monday on/before the 1st through 42 days later. */
+export function monthWindow(now: Date): { from: Date; to: Date } {
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const from = new Date(first);
+  from.setDate(1 - ((first.getDay() + 6) % 7));
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(from);
+  to.setDate(to.getDate() + 42);
+  return { from, to };
+}
+
+/** The fetch window for the active view, centered on `now`. */
+export function windowForView(view: DisplayView, now: Date): { from: Date; to: Date } {
+  if (view === "day") return dayWindow(now);
+  if (view === "month") return monthWindow(now);
+  return weekWindow(now);
 }

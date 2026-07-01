@@ -1,5 +1,6 @@
 // Inferred row types for select (read) and insert (write) across the wire.
 import type {
+  displaySetting,
   event,
   eventOverride,
   googleCalendar,
@@ -37,3 +38,6 @@ export type NewGoogleCalendar = typeof googleCalendar.$inferInsert;
 
 export type Timer = typeof timer.$inferSelect;
 export type NewTimer = typeof timer.$inferInsert;
+
+export type DisplaySetting = typeof displaySetting.$inferSelect;
+export type NewDisplaySetting = typeof displaySetting.$inferInsert;

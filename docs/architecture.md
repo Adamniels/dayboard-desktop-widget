@@ -56,7 +56,27 @@ display and admin never talk to each other — both talk only to the api.
 See `.claude/memory/decisions/unified-event-model.md` for the authoritative version.
 Event (unified, `type`, optional `googleEventId`, optional `projectId`) · Project ·
 Todo (belongs to Project, surfaces during a linked time block) · Reminder
-(absolute/relative time, optional recurrence) · Note (general or project-linked).
+(absolute/relative time, optional recurrence) · Note (general or project-linked) ·
+DisplaySetting (singleton row holding the admin-chosen active view: day, week, or month;
+migration 0003).
+
+## Frontend structure
+
+Both React apps use inline styles that read a shared token module per app
+(`apps/display/src/theme.ts`, `apps/admin/src/theme.ts`: colors, spacing, radii, type,
+and `hexA`), all lifted from the approved prototype so the look changes in one place.
+
+The **display** composes a presentational `DisplayShell` (kiosk clock header, status pill,
+framed calendar card, side panel) around one of `WeekView` / `DayView` / `MonthView`,
+chosen by `config.activeView`. Pure view bucketing (`buildWeek`, `buildDay`, `buildMonth`,
+`tzDateKey`) lives in `apps/display/src` and is unit tested; the components only turn the
+buckets into pixels. `App` fetches per-view windows and re-renders on the `display.changed`
+WebSocket message so an admin view switch propagates within about a second.
+
+The **admin** is the dark "Control Room": a sidebar (Calendar, Projects, Reminders &
+timers, Notes, Display & sync) over tab components that drive the REST API. The
+Display & sync tab holds the active-view switcher (`GET`/`PATCH /display`) and the Google
+sync status.
 
 ## Deployment
 

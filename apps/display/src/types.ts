@@ -12,10 +12,13 @@ export interface OccurrenceDTO {
   googleEventId: string | null;
 }
 
+export type DisplayView = "day" | "week" | "month";
+
 export interface DisplayConfig {
   timezone: string;
   startHour: number;
   endHour: number;
+  activeView: DisplayView;
 }
 
 export interface TodoDTO {

@@ -2,6 +2,7 @@
 // message, auto dismissing after a few seconds, with an optional chime. The kiosk Chromium
 // is launched with --autoplay-policy=no-user-gesture-required so the chime plays unattended.
 import { useEffect } from "react";
+import { hexA } from "./theme";
 
 const DISMISS_MS = 8000;
 
@@ -42,7 +43,7 @@ export function Takeover({ content, onDismiss }: { content: TakeoverContent; onD
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(12,9,16,.92)",
+        background: hexA("#0c0910", 0.92),
         backdropFilter: "blur(6px)",
         display: "flex",
         flexDirection: "column",

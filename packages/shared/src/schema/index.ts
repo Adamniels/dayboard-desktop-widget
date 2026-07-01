@@ -7,3 +7,4 @@ export * from "./reminder";
 export * from "./note";
 export * from "./google";
 export * from "./timer";
+export * from "./display";

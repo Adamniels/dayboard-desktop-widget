@@ -84,9 +84,13 @@ api must feed the screen.
   manual trigger button. Lift the surfaced todos and now/next rules from the prototype
   into `packages/core` here.
 
-- **Phase 3 — More views and polish.** The prototype already sketches day and month views
-  and admin driven view switching (FR-VIEW-3); this phase makes them real over live data
-  and adds polish like day/night dimming that the prototype does not cover.
+- **Phase 3 — More views and polish.** Done. The prototype's day and month views and admin
+  driven view switching (FR-VIEW-3) are now real over live data: pure `buildDay`/`buildMonth`
+  bucketing in `apps/display`, a `display_setting` singleton the admin patches (`GET`/`PATCH
+  /display`), and a live `display.changed` push. The visual polish pass moved the display onto
+  shared theme tokens and rebuilt the admin as the prototype's dark Control Room (sidebar +
+  Calendar/Projects/Reminders/Notes/Display tabs). Day/night dimming was explicitly deferred to
+  a later phase (see `docs/phases/phase-3-plan.md`).
 
 - **Phase 4 — AI inside the product.** Not in the prototype at all; future work.
 

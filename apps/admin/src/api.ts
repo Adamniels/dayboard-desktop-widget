@@ -1,6 +1,8 @@
 // REST helpers for the admin app.
 import type {
   CalendarInfo,
+  DisplaySettingDTO,
+  DisplayView,
   EventInput,
   EventRow,
   NoteRow,
@@ -67,6 +69,22 @@ export async function getSyncStatus(): Promise<SyncStatus> {
 
 export async function getCalendars(): Promise<CalendarInfo[]> {
   return json(await fetch(`${BASE}/calendars`));
+}
+
+// The wall display's active view. Reading reflects the current control; patching switches the
+// display (the api broadcasts so it flips within ~1s).
+export async function getDisplaySetting(): Promise<DisplaySettingDTO> {
+  return json(await fetch(`${BASE}/display`));
+}
+
+export async function setDisplayView(activeView: DisplayView): Promise<DisplaySettingDTO> {
+  return json(
+    await fetch(`${BASE}/display`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ activeView }),
+    }),
+  );
 }
 
 function send<T>(method: string, path: string, body?: unknown): Promise<T> {

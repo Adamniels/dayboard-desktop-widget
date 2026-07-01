@@ -72,10 +72,3 @@ export function buildWeek(occurrences: OccurrenceDTO[], timezone: string): WeekM
   });
   return { events };
 }
-
-/** Display color by type, matching the prototype's evColor (block teal, meeting accent). */
-export function colorForType(type: OccurrenceDTO["type"]): string {
-  if (type === "block") return "#3FB8AF";
-  if (type === "meeting") return "#7C6CF6";
-  return "#8A8694"; // general
-}

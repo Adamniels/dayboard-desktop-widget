@@ -1,5 +1,12 @@
 export type EventType = "meeting" | "block" | "general";
 
+export type DisplayView = "day" | "week" | "month";
+
+export interface DisplaySettingDTO {
+  activeView: DisplayView;
+  updatedAt: string;
+}
+
 export interface OccurrenceDTO {
   eventId: string;
   title: string;
@@ -88,4 +95,10 @@ export interface TimerRow {
   status: "running" | "paused" | "done";
   phase: "work" | "short_break" | "long_break" | null;
   endsAt: string | null;
+  remainingMs: number | null;
+  workMinutes: number | null;
+  breakMinutes: number | null;
+  longBreakMinutes: number | null;
+  cyclesDone: number;
+  cyclesTarget: number | null;
 }

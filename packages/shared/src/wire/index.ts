@@ -4,10 +4,12 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import {
+  DISPLAY_VIEWS,
   EVENT_TYPES,
   REMINDER_KINDS,
   TIMER_MODES,
   TODO_STATUSES,
+  displaySetting,
   event,
   eventOverride,
   googleCalendar,
@@ -54,3 +56,13 @@ export const googleCredentialInsertSchema = createInsertSchema(googleCredential)
 
 export const googleCalendarSelectSchema = createSelectSchema(googleCalendar);
 export const googleCalendarInsertSchema = createInsertSchema(googleCalendar);
+
+export const displaySettingSelectSchema = createSelectSchema(displaySetting, {
+  activeView: z.enum(DISPLAY_VIEWS),
+});
+export const displaySettingInsertSchema = createInsertSchema(displaySetting, {
+  activeView: z.enum(DISPLAY_VIEWS),
+});
+
+// The admin sends just the active view; constrain it to the three valid values.
+export const displayViewPatchSchema = z.object({ activeView: z.enum(DISPLAY_VIEWS) });
