@@ -40,6 +40,14 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
 - **Then** it persists, pushes to Google, and the display shows blocks and meetings
   styled differently.
 
+### US-EVT2 — Plan visually on a calendar
+**Covers:** FR-EVT-3
+
+- **Given** the admin's Calendar tab shows an interactive weekly grid
+- **When** I drag across a time span, click an event, or drag an event or its edges
+- **Then** dragging opens the editor prefilled with those times, clicking opens that event,
+  and moving or resizing persists immediately (recurring events stay locked).
+
 ## Epic: Display
 
 ### US-VIEW1 — Glanceable from across the room

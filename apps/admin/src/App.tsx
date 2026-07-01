@@ -2,11 +2,11 @@
 // Calendar, Projects, Reminders & timers, Notes, and Display & sync tabs, transcribed from the
 // prototype's admin surface. The display never talks to it directly; both talk to the api.
 import { useCallback, useEffect, useState } from "react";
-import { getProjects, listOccurrences, weekWindow } from "./api";
+import { getProjects } from "./api";
 import { CalendarTab } from "./EventEditor";
 import { DisplayTab, NotesTab, ProjectsTab, RemindersTab } from "./Planning";
 import { KEYFRAMES, colors, hexA } from "./theme";
-import type { OccurrenceDTO, ProjectRow } from "./types";
+import type { ProjectRow } from "./types";
 
 type Tab = "calendar" | "projects" | "reminders" | "notes" | "display";
 
@@ -21,26 +21,14 @@ const NAV: { key: Tab; label: string; icon: string }[] = [
 export function App() {
   const [tab, setTab] = useState<Tab>("calendar");
   const [projects, setProjects] = useState<ProjectRow[]>([]);
-  const [occurrences, setOccurrences] = useState<OccurrenceDTO[]>([]);
 
   const loadProjects = useCallback(() => {
     getProjects().then(setProjects).catch(() => setProjects([]));
   }, []);
 
-  const loadOccurrences = useCallback(() => {
-    const { from, to } = weekWindow(new Date());
-    listOccurrences(from, to).then(setOccurrences).catch(() => setOccurrences([]));
-  }, []);
-
   useEffect(() => {
     loadProjects();
-    loadOccurrences();
-  }, [loadProjects, loadOccurrences]);
-
-  const refreshCalendar = useCallback(() => {
-    loadOccurrences();
-    loadProjects();
-  }, [loadOccurrences, loadProjects]);
+  }, [loadProjects]);
 
   return (
     <div style={{ height: "100vh", display: "flex", background: colors.bg, color: colors.text, fontFamily: "system-ui, sans-serif" }}>
@@ -74,7 +62,7 @@ export function App() {
 
       {/* content */}
       <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "28px 32px" }}>
-        {tab === "calendar" && <CalendarTab projects={projects} occurrences={occurrences} onChanged={refreshCalendar} />}
+        {tab === "calendar" && <CalendarTab projects={projects} onChanged={loadProjects} />}
         {tab === "projects" && <ProjectsTab projects={projects} onChanged={loadProjects} />}
         {tab === "reminders" && <RemindersTab />}
         {tab === "notes" && <NotesTab projects={projects} />}

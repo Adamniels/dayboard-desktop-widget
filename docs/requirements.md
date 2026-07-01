@@ -31,6 +31,10 @@ live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
   a time block is an event reserved for focused work rather than a meeting, and `general`
   is the default applied to events imported from Google (which has no meeting/block
   concept).
+- **FR-EVT-3** The admin shall provide an interactive weekly calendar for authoring events by
+  direct manipulation: dragging on the grid to create (prefilling the editor), clicking an
+  event to edit, dragging to move, and dragging edges to resize. Recurring events are not
+  draggable (recurrence is read-only in v1, per FR-CAL-6).
 
 ### FR-VIEW — Display views
 - **FR-VIEW-1** The display shall show a weekly view of events by default.

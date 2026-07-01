@@ -58,6 +58,13 @@
       "testMatch": [{ "file": "shared", "name": "event type schema" }]
     },
     {
+      "id": "FR-EVT-3",
+      "story": "US-EVT2",
+      "type": "auto+review",
+      "verify": "Admin interactive week calendar: occurrence→event mapping (recurring locked), selection→editor draft, and move/resize→patch with a min-duration guard; drag/click/move/resize reviewed live.",
+      "testMatch": [{ "file": "admin", "name": "interactive week calendar" }]
+    },
+    {
       "id": "FR-VIEW-1",
       "story": "US-VIEW1",
       "type": "auto+review",

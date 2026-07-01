@@ -76,7 +76,11 @@ WebSocket message so an admin view switch propagates within about a second.
 The **admin** is the dark "Control Room": a sidebar (Calendar, Projects, Reminders &
 timers, Notes, Display & sync) over tab components that drive the REST API. The
 Display & sync tab holds the active-view switcher (`GET`/`PATCH /display`) and the Google
-sync status.
+sync status. The Calendar tab is an interactive weekly grid built on **FullCalendar**
+(timeGrid week + interaction, the free MIT plugins): drag to create (which prefills the side
+editor), click to edit, and drag to move or resize, with the browser-free mapping and patch
+logic in `apps/admin/src/calendar-model.ts` (unit tested, FR-EVT-3). It shows the full 24-hour
+day, unlike the display's glanceable 07:00–21:00 window.
 
 ## Deployment
 

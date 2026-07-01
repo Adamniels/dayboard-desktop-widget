@@ -4,9 +4,9 @@
 > and on-disk `test-results.json`. Edit those, not this file. See
 > `docs/verification.md`.
 
-**21** pass · **0** fail · **0** no test (of 21 automated) · **2** manual · **1** review
+**22** pass · **0** fail · **0** no test (of 22 automated) · **2** manual · **1** review
 
-Tests discovered on disk: 47.
+Tests discovered on disk: 53.
 
 | Req ID | Story | Type | Status | Detail |
 | --- | --- | --- | --- | --- |
@@ -18,6 +18,7 @@ Tests discovered on disk: 47.
 | FR-CAL-6 | US-CAL3 | auto+manual | PASS | 3 passing |
 | FR-EVT-1 | US-EVT1 | auto | PASS | 1 passing |
 | FR-EVT-2 | US-EVT1 | auto | PASS | 3 passing |
+| FR-EVT-3 | US-EVT2 | auto+review | PASS | 6 passing |
 | FR-VIEW-1 | US-VIEW1 | auto+review | PASS | 3 passing |
 | FR-VIEW-2 | US-VIEW1 | manual | MANUAL | human check |
 | FR-RT-1 | US-VIEW1 | auto | PASS | 1 passing |

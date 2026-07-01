@@ -1,14 +1,19 @@
-// The Calendar tab of the control room (FR-EVT-1/2): a mini month calendar, today's schedule,
-// and a styled event editor. Transcribed from the prototype's admin Calendar surface. A
-// Google-sourced recurring event keeps its recurrence read-only (FR-CAL-6).
-import { useEffect, useState } from "react";
-import { createEvent, deleteEvent, getEvent, updateEvent } from "./api";
+// The Calendar tab of the control room (FR-EVT-1/2/3): an interactive weekly grid built on
+// FullCalendar (timeGrid week + interaction). Drag on the grid to create (prefills the side
+// editor), click an event to edit, drag to move, drag edges to resize. Move/resize persist
+// immediately; recurring Google events are locked (recurrence read-only, FR-CAL-6). The pure
+// mapping/patch logic lives in calendar-model.ts (tested); this file is the FullCalendar wiring.
+import FullCalendar from "@fullcalendar/react";
+import interactionPlugin from "@fullcalendar/interaction";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createEvent, deleteEvent, getEvent, listOccurrences, updateEvent } from "./api";
+import { occurrencesToEvents, selectionToDraft, moveResizeToPatch, type EventDraft } from "./calendar-model";
 import { colorForType, colors, hexA } from "./theme";
 import type { EventType, OccurrenceDTO, ProjectRow } from "./types";
 import { GhostButton, Label, PageHeading, PrimaryButton, Select, TextInput, card } from "./ui";
 
 const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-const DOW = ["M", "T", "W", "T", "F", "S", "S"];
 
 function isoToLocalInput(iso: string): string {
   const d = new Date(iso);
@@ -16,125 +21,111 @@ function isoToLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const sameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+// Dark theme for FullCalendar (it renders its own DOM), scoped under .db-cal.
+const CAL_CSS = `
+.db-cal { --fc-border-color: ${colors.border}; --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: ${colors.surface}; --fc-today-bg-color: ${hexA(colors.accent, 0.08)};
+  --fc-now-indicator-color: ${colors.red}; color: ${colors.text}; }
+.db-cal .fc-theme-standard td, .db-cal .fc-theme-standard th { border-color: ${colors.border}; }
+.db-cal .fc-col-header-cell-cushion, .db-cal .fc-timegrid-slot-label-cushion,
+.db-cal .fc-timegrid-axis-cushion { color: ${colors.textMuted}; text-decoration: none; }
+.db-cal .fc-toolbar-title { font-size: 16px; font-weight: 600; }
+.db-cal .fc-button-primary { background: ${colors.accent}; border-color: ${colors.accent};
+  font-size: 13px; text-transform: capitalize; box-shadow: none; }
+.db-cal .fc-button-primary:hover { background: ${colors.accentSoft}; border-color: ${colors.accentSoft}; }
+.db-cal .fc-button-primary:disabled { background: ${hexA(colors.accent, 0.4)}; border-color: transparent; }
+.db-cal .fc-button-primary:not(:disabled).fc-button-active { background: ${colors.accentSoft}; border-color: ${colors.accentSoft}; }
+.db-cal .fc-event { border-radius: 6px; padding: 1px 3px; font-size: 12px; cursor: pointer; }
+.db-cal .fc-timegrid-now-indicator-line { border-color: ${colors.red}; }
+`;
 
-export function CalendarTab({
-  projects,
-  occurrences,
-  onChanged,
-}: {
-  projects: ProjectRow[];
-  occurrences: OccurrenceDTO[];
-  onChanged: () => void;
-}) {
-  const [editing, setEditing] = useState<{ id: string | null } | null>(null);
-  const now = new Date();
+export function CalendarTab({ projects, onChanged }: { projects: ProjectRow[]; onChanged: () => void }) {
+  const [occurrences, setOccurrences] = useState<OccurrenceDTO[]>([]);
+  const [editing, setEditing] = useState<{ id: string | null; draft?: EventDraft } | null>(null);
+  const range = useRef<{ from: Date; to: Date } | null>(null);
 
-  const today = occurrences
-    .filter((o) => sameDay(new Date(o.start), now))
-    .sort((a, b) => +new Date(a.start) - +new Date(b.start));
+  const refresh = useCallback(() => {
+    if (!range.current) return;
+    listOccurrences(range.current.from, range.current.to).then(setOccurrences).catch(() => setOccurrences([]));
+  }, []);
+
+  const events = occurrencesToEvents(occurrences);
+
+  function afterSave() {
+    setEditing(null);
+    refresh();
+    onChanged();
+  }
 
   return (
-    <div style={{ maxWidth: 980, margin: "0 auto" }}>
+    <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <style>{CAL_CSS}</style>
       <PageHeading
         title="Events"
-        subtitle="Create meetings and focus blocks. Link a block to a project to surface its to-dos."
+        subtitle="Drag on the grid to create a block, click an event to edit, drag to move or resize. Link a block to a project to surface its to-dos."
         action={<PrimaryButton onClick={() => setEditing({ id: null })}>+ New event</PrimaryButton>}
       />
-      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, alignItems: "start" }}>
-        <MiniCalendar now={now} occurrences={occurrences} />
-        <div>
-          {editing ? (
+      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        <div className="db-cal" style={{ flex: 1, minWidth: 0 }}>
+          <FullCalendar
+            plugins={[timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
+            firstDay={1}
+            allDaySlot={false}
+            nowIndicator
+            slotMinTime="00:00:00"
+            slotMaxTime="24:00:00"
+            scrollTime="07:00:00"
+            slotDuration="01:00:00"
+            snapDuration="00:30:00"
+            height="74vh"
+            expandRows
+            selectable
+            selectMirror
+            editable
+            eventStartEditable
+            eventDurationEditable
+            events={events}
+            select={(info) => setEditing({ id: null, draft: selectionToDraft(info.startStr, info.endStr) })}
+            eventClick={(info) => setEditing({ id: String(info.event.extendedProps.eventId) })}
+            eventDrop={(info) => {
+              const patch = moveResizeToPatch(info.event.startStr, info.event.endStr);
+              updateEvent(String(info.event.extendedProps.eventId), patch)
+                .then(() => {
+                  refresh();
+                  onChanged();
+                })
+                .catch(() => info.revert());
+            }}
+            eventResize={(info) => {
+              const patch = moveResizeToPatch(info.event.startStr, info.event.endStr);
+              updateEvent(String(info.event.extendedProps.eventId), patch)
+                .then(() => {
+                  refresh();
+                  onChanged();
+                })
+                .catch(() => info.revert());
+            }}
+            datesSet={(info) => {
+              range.current = { from: info.start, to: info.end };
+              refresh();
+            }}
+          />
+        </div>
+
+        {editing && (
+          <div style={{ width: 380, flex: "0 0 380px" }}>
             <Editor
-              key={editing.id ?? "new"}
+              key={`${editing.id ?? "new"}:${editing.draft?.start ?? ""}`}
               editingId={editing.id}
+              draft={editing.draft}
               projects={projects}
-              onSaved={() => {
-                setEditing(null);
-                onChanged();
-              }}
+              onSaved={afterSave}
               onCancel={() => setEditing(null)}
             />
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: ".06em", color: colors.textFaint, fontWeight: 600, marginBottom: 2 }}>
-                Today's schedule
-              </div>
-              {today.length === 0 && <div style={{ fontSize: 13.5, color: colors.textDim }}>Nothing scheduled today.</div>}
-              {today.map((o, i) => {
-                const c = colorForType(o.type);
-                return (
-                  <button
-                    key={`${o.eventId}-${i}`}
-                    onClick={() => setEditing({ id: o.eventId })}
-                    style={{ display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 13, padding: "13px 15px", cursor: "pointer", color: colors.text }}
-                  >
-                    <span style={{ width: 11, height: 11, borderRadius: 4, flex: "0 0 auto", background: o.type === "block" ? hexA(c, 0.25) : c, backgroundImage: o.type === "block" ? `repeating-linear-gradient(45deg,${c} 0 2px,transparent 2px 4px)` : "none", border: o.type === "block" ? `1px solid ${c}` : "none" }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600 }}>{o.title}</div>
-                      <div style={{ fontSize: 12, color: colors.textDim, marginTop: 2 }}>
-                        {timeRange(o.start, o.end)}
-                        {o.recurring ? " · recurring" : ""}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 7, color: "#fff", background: hexA(c, 0.22), textTransform: "capitalize" }}>{o.type}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function timeRange(startISO: string, endISO: string): string {
-  const fmt = (d: Date) => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  return `${fmt(new Date(startISO))} – ${fmt(new Date(endISO))}`;
-}
-
-function MiniCalendar({ now, occurrences }: { now: Date; occurrences: OccurrenceDTO[] }) {
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const start = new Date(first);
-  start.setDate(1 - ((first.getDay() + 6) % 7));
-  const days = Array.from({ length: 42 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    return d;
-  });
-  const hasEvent = (d: Date) => occurrences.some((o) => sameDay(new Date(o.start), d));
-  const monthLabel = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
-  return (
-    <div style={{ ...card, padding: 14 }}>
-      <div style={{ textAlign: "center", fontSize: 13.5, fontWeight: 600, marginBottom: 10 }}>{monthLabel}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 1 }}>
-        {DOW.map((w, i) => (
-          <div key={i} style={{ textAlign: "center", fontSize: 9.5, color: colors.textGhost, fontWeight: 600, paddingBottom: 5 }}>{w}</div>
-        ))}
-        {days.map((d, i) => {
-          const inMonth = d.getMonth() === now.getMonth();
-          const isToday = sameDay(d, now);
-          const evt = hasEvent(d);
-          return (
-            <div
-              key={i}
-              style={{
-                textAlign: "center",
-                fontSize: 11.5,
-                padding: "6px 0",
-                borderRadius: 7,
-                color: isToday ? "#fff" : inMonth ? (evt ? "rgba(255,255,255,.85)" : colors.textFaint) : "rgba(255,255,255,.18)",
-                background: isToday ? colors.accent : "transparent",
-                fontWeight: isToday ? 700 : evt ? 600 : 400,
-              }}
-            >
-              {d.getDate()}
-            </div>
-          );
-        })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -147,19 +138,21 @@ const TYPES: { key: EventType; label: string }[] = [
 
 function Editor({
   editingId,
+  draft,
   projects,
   onSaved,
   onCancel,
 }: {
   editingId: string | null;
+  draft?: EventDraft;
   projects: ProjectRow[];
   onSaved: () => void;
   onCancel: () => void;
 }) {
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<EventType>("block");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
+  const [type, setType] = useState<EventType>(draft?.type ?? "block");
+  const [start, setStart] = useState(draft?.start ?? "");
+  const [end, setEnd] = useState(draft?.end ?? "");
   const [projectId, setProjectId] = useState("");
   const [recurringLocked, setRecurringLocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -216,7 +209,7 @@ function Editor({
 
       <div style={fieldCol}>
         <Label>Title</Label>
-        <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event title" />
+        <TextInput value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event title" autoFocus />
       </div>
 
       <div style={fieldCol}>

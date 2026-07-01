@@ -92,6 +92,11 @@ api must feed the screen.
   Calendar/Projects/Reminders/Notes/Display tabs). Day/night dimming was explicitly deferred to
   a later phase (see `docs/phases/phase-3-plan.md`).
 
+- **Phase 3.1 — Interactive admin calendar.** Beyond the prototype (which authored events from
+  a list plus a form): the admin Calendar tab becomes a Google-Calendar-style weekly grid on
+  FullCalendar, with drag to create, click to edit, and drag to move/resize (FR-EVT-3). See
+  `docs/phases/phase-3.1-admin-calendar-plan.md`.
+
 - **Phase 4 — AI inside the product.** Not in the prototype at all; future work.
 
 ## What transfers vs what gets rebuilt
