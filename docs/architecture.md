@@ -69,8 +69,10 @@ and `hexA`), all lifted from the approved prototype so the look changes in one p
 The **display** composes a presentational `DisplayShell` (kiosk clock header, status pill,
 framed calendar card, side panel) around one of `WeekView` / `DayView` / `MonthView`,
 chosen by `config.activeView`. Pure view bucketing (`buildWeek`, `buildDay`, `buildMonth`,
-`tzDateKey`) lives in `apps/display/src` and is unit tested; the components only turn the
-buckets into pixels. `App` fetches per-view windows and re-renders on the `display.changed`
+`tzDateKey`, `nowScrollTop`) lives in `apps/display/src` and is unit tested; the components only
+turn the buckets into pixels. The day and week grids span the full 00:00–24:00 day and scroll to
+keep the now line centered, clamped so the window never runs past midnight or the end of day
+(`nowScrollTop` + the `useNowScroll` hook); the month view is unaffected. `App` fetches per-view windows and re-renders on the `display.changed`
 WebSocket message so an admin view switch propagates within about a second.
 
 The **admin** is the dark "Control Room": a sidebar (Calendar, Projects, Reminders &

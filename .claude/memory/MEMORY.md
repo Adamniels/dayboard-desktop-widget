@@ -58,3 +58,4 @@ conversation.
 - [Design reference: the prototype](context/design-reference-prototype.md) — the approved interactive prototype is the canonical look and interaction reference; backend parts are mocked. See docs/prototype-gap-analysis.md.
 - [Admin control room](context/admin-control-room.md) — the admin is the prototype's dark sidebar + tabs (Calendar/Projects/Reminders/Notes/Display) driving the REST api.
 - [Admin interactive calendar](context/admin-interactive-calendar.md) — the Calendar tab is a FullCalendar week grid (drag create/move/resize); pure logic in calendar-model.ts (tested).
+- [Display now-following scroll](context/display-now-following-scroll.md) — day/week span the full 24h and scroll to keep the now line centered, clamped to the day edges (nowScrollTop + useNowScroll).

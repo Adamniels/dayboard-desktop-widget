@@ -6,7 +6,7 @@
 
 **22** pass · **0** fail · **0** no test (of 22 automated) · **2** manual · **1** review
 
-Tests discovered on disk: 53.
+Tests discovered on disk: 57.
 
 | Req ID | Story | Type | Status | Detail |
 | --- | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ Tests discovered on disk: 53.
 | FR-REM-3 | US-REM1 | auto | PASS | 1 passing |
 | FR-REM-4 | US-REM1 | auto+review | PASS | 1 passing |
 | FR-NOTE-1 | US-NOTE1 | auto | PASS | 1 passing |
-| FR-VIEW-3 | US-VIEW2 | auto+review | PASS | 7 passing |
+| FR-VIEW-3 | US-VIEW2 | auto+review | PASS | 11 passing |
 | NFR-REL-1 | US-NFR1 | auto | PASS | 1 passing |
 | NFR-SEC-1 | US-NFR1 | review | REVIEW | human review |
 | NFR-PERF-1 | US-NFR1 | manual | MANUAL | human check |

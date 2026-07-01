@@ -18,6 +18,27 @@ export function tzDateKey(date: Date, timezone: string): string {
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
+export interface NowScroll {
+  /** Pixels to scroll the full-day grid so the now line is centered, clamped to the day. */
+  scrollTop: number;
+  /** Resulting on-screen position of the now line inside the viewport (px from its top). */
+  lineTop: number;
+}
+
+/**
+ * Where to scroll a full 00:00–24:00 grid so the now line sits centered in the viewport, but
+ * never scrolling above midnight or below the end of day (FR-VIEW day/week follow-now). When
+ * the clamp bites — early morning or late night — the line rides off-center instead; in the
+ * middle of the day it lands at the exact center. Pure, so the math is unit tested.
+ */
+export function nowScrollTop(nowMinutes: number, hourPx: number, viewportHeight: number, totalHours = 24): NowScroll {
+  const gridHeight = totalHours * hourPx;
+  const nowY = (nowMinutes / 60) * hourPx;
+  const maxScroll = Math.max(0, gridHeight - viewportHeight);
+  const scrollTop = Math.max(0, Math.min(nowY - viewportHeight / 2, maxScroll));
+  return { scrollTop, lineTop: nowY - scrollTop };
+}
+
 export interface DayEvent {
   eventId: string;
   title: string;

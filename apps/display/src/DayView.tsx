@@ -1,14 +1,17 @@
-// The single-day view (FR-VIEW-3): today's occurrences in one tall column over the configured
-// startHour..endHour, with the now line and dot. Lives inside the framed calendar card with a
-// centered day header; the now/next card is in the side panel. Transcribed from the
-// prototype's `view === 'day'` grid (taller hour pixel than the week). Reads buildDay + tokens.
+// The single-day view (FR-VIEW-3): today's occurrences in one tall column spanning the full
+// 00:00–24:00 day, scrolled to keep the now line centered (clamped to the day edges) via
+// useNowScroll. Lives inside the framed calendar card with a centered day header; the now/next
+// card is in the side panel. Reads buildDay + tokens.
+import { useRef } from "react";
 import { colorForType, colors, hexA, hourPx, radii } from "./theme";
 import type { DisplayConfig, OccurrenceDTO } from "./types";
 import { buildDay } from "./view";
+import { useNowScroll } from "./useNowScroll";
 import { tzParts } from "./week";
 
 const HOUR_PX = hourPx.day;
 const GUTTER = 56;
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 interface Props {
   config: DisplayConfig;
@@ -17,18 +20,19 @@ interface Props {
   landscape: boolean;
 }
 
-function minutesToTop(minutes: number, startHour: number): number {
-  return ((minutes - startHour * 60) / 60) * HOUR_PX;
+function minutesToTop(minutes: number): number {
+  return (minutes / 60) * HOUR_PX;
 }
 
 export function DayView({ config, occurrences, now }: Props) {
-  const { startHour, endHour, timezone } = config;
-  const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
+  const { timezone } = config;
   const day = buildDay(occurrences, timezone, now);
 
   const nowParts = tzParts(now, timezone);
   const nowMinutes = nowParts.hour * 60 + nowParts.minute;
-  const nowVisible = nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useNowScroll(scrollRef, nowMinutes, HOUR_PX);
 
   const headLabel = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "long" }).format(now).toUpperCase();
   const headDate = new Intl.DateTimeFormat("en-US", { timeZone: timezone, month: "short", day: "numeric" }).format(now);
@@ -43,10 +47,10 @@ export function DayView({ config, occurrences, now }: Props) {
         </div>
       </div>
 
-      {/* scroll body */}
-      <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "auto" }} id="db-grid-scroll">
+      {/* scroll body — full day, auto-centered on now */}
+      <div ref={scrollRef} style={{ display: "flex", flex: 1, minHeight: 0, overflow: "auto" }} id="db-grid-scroll">
         <div style={{ width: GUTTER, flex: `0 0 ${GUTTER}px` }}>
-          {hours.map((h) => (
+          {HOURS.map((h) => (
             <div key={h} style={{ height: HOUR_PX, fontSize: 10.5, color: colors.textGhost, textAlign: "right", paddingRight: 8, transform: "translateY(-6px)" }}>
               {((h % 12) || 12) + " " + (h < 12 ? "AM" : "PM")}
             </div>
@@ -54,20 +58,16 @@ export function DayView({ config, occurrences, now }: Props) {
         </div>
 
         <div style={{ flex: 1, borderLeft: `1px solid ${colors.hairline}`, position: "relative" }}>
-          <div style={{ position: "relative", height: hours.length * HOUR_PX }}>
-            {hours.map((h) => (
-              <div key={h} style={{ position: "absolute", top: minutesToTop(h * 60, startHour), left: 0, right: 0, borderTop: `1px solid ${colors.hairline}` }} />
+          <div style={{ position: "relative", height: HOURS.length * HOUR_PX }}>
+            {HOURS.map((h) => (
+              <div key={h} style={{ position: "absolute", top: minutesToTop(h * 60), left: 0, right: 0, borderTop: `1px solid ${colors.hairline}` }} />
             ))}
 
-            {nowVisible && (
-              <>
-                <div style={{ position: "absolute", top: minutesToTop(nowMinutes, startHour) - 4, left: -4, width: 9, height: 9, borderRadius: "50%", background: colors.red, zIndex: 7, boxShadow: `0 0 8px ${colors.red}` }} />
-                <div style={{ position: "absolute", top: minutesToTop(nowMinutes, startHour), left: 0, right: 6, height: 0, borderTop: `2px solid ${colors.red}`, zIndex: 6 }} />
-              </>
-            )}
+            <div style={{ position: "absolute", top: minutesToTop(nowMinutes) - 4, left: -4, width: 9, height: 9, borderRadius: "50%", background: colors.red, zIndex: 7, boxShadow: `0 0 8px ${colors.red}` }} />
+            <div style={{ position: "absolute", top: minutesToTop(nowMinutes), left: 0, right: 6, height: 0, borderTop: `2px solid ${colors.red}`, zIndex: 6 }} />
 
             {day.events.map((e, i) => {
-              const top = minutesToTop(e.startMinutes, startHour);
+              const top = minutesToTop(e.startMinutes);
               const height = Math.max(20, ((e.endMinutes - e.startMinutes) / 60) * HOUR_PX);
               const c = colorForType(e.type);
               const isBlock = e.type === "block";

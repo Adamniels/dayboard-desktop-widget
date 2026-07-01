@@ -1,15 +1,18 @@
-// The weekly grid (FR-VIEW-1), transcribed from the prototype: a day header (weekday label +
-// date, today in an accent circle), an hour gutter, events positioned and striped by type,
-// and a now line with a dot. Lives inside the framed calendar card; the now/next card is in
-// the side panel. Orientation-aware. Reads theme tokens (Phase 3 polish).
+// The weekly grid (FR-VIEW-1): a day header (weekday label + date, today in an accent circle),
+// an hour gutter, events positioned and striped by type, and a now line with a dot. Spans the
+// full 00:00–24:00 day and scrolls to keep the now line centered (clamped to the day edges) via
+// useNowScroll. Lives inside the framed calendar card; the now/next card is in the side panel.
+import { useRef } from "react";
 import { colorForType, colors, hexA, hourPx, radii } from "./theme";
 import type { DisplayConfig, OccurrenceDTO } from "./types";
 import { tzDateKey } from "./view";
+import { useNowScroll } from "./useNowScroll";
 import { buildWeek, tzParts } from "./week";
 
 const HOUR_PX = hourPx.week;
 const GUTTER = 56;
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 interface Props {
   config: DisplayConfig;
@@ -18,8 +21,8 @@ interface Props {
   landscape: boolean;
 }
 
-function minutesToTop(minutes: number, startHour: number): number {
-  return ((minutes - startHour * 60) / 60) * HOUR_PX;
+function minutesToTop(minutes: number): number {
+  return (minutes / 60) * HOUR_PX;
 }
 
 // The date number shown under each weekday, aligned to the display timezone's current week.
@@ -29,14 +32,15 @@ function weekDates(now: Date, timezone: string, weekdayIndex: number): number[] 
 }
 
 export function WeekView({ config, occurrences, now, landscape }: Props) {
-  const { startHour, endHour, timezone } = config;
-  const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
+  const { timezone } = config;
   const week = buildWeek(occurrences, timezone);
 
   const nowParts = tzParts(now, timezone);
   const nowMinutes = nowParts.hour * 60 + nowParts.minute;
-  const nowVisible = nowMinutes >= startHour * 60 && nowMinutes <= endHour * 60;
   const dates = weekDates(now, timezone, nowParts.weekdayIndex);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useNowScroll(scrollRef, nowMinutes, HOUR_PX);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, color: colors.text }}>
@@ -61,11 +65,11 @@ export function WeekView({ config, occurrences, now, landscape }: Props) {
         })}
       </div>
 
-      {/* scroll body */}
-      <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "auto" }} id="db-grid-scroll">
+      {/* scroll body — full day, auto-centered on now */}
+      <div ref={scrollRef} style={{ display: "flex", flex: 1, minHeight: 0, overflow: "auto" }} id="db-grid-scroll">
         {/* hour gutter */}
         <div style={{ width: GUTTER, flex: `0 0 ${GUTTER}px` }}>
-          {hours.map((h) => (
+          {HOURS.map((h) => (
             <div key={h} style={{ height: HOUR_PX, fontSize: 10.5, color: colors.textGhost, textAlign: "right", paddingRight: 8, transform: "translateY(-6px)" }}>
               {((h % 12) || 12) + " " + (h < 12 ? "AM" : "PM")}
             </div>
@@ -77,22 +81,22 @@ export function WeekView({ config, occurrences, now, landscape }: Props) {
           const isToday = dayIndex === nowParts.weekdayIndex;
           return (
             <div key={label} style={{ flex: 1, minWidth: landscape ? 0 : 64, borderLeft: `1px solid ${colors.hairline}`, position: "relative" }}>
-              <div style={{ position: "relative", height: hours.length * HOUR_PX }}>
-                {hours.map((h) => (
-                  <div key={h} style={{ position: "absolute", top: minutesToTop(h * 60, startHour), left: 0, right: 0, borderTop: `1px solid ${colors.hairline}` }} />
+              <div style={{ position: "relative", height: HOURS.length * HOUR_PX }}>
+                {HOURS.map((h) => (
+                  <div key={h} style={{ position: "absolute", top: minutesToTop(h * 60), left: 0, right: 0, borderTop: `1px solid ${colors.hairline}` }} />
                 ))}
 
-                {isToday && nowVisible && (
+                {isToday && (
                   <>
-                    <div style={{ position: "absolute", top: minutesToTop(nowMinutes, startHour) - 4, left: -4, width: 9, height: 9, borderRadius: "50%", background: colors.red, zIndex: 4, boxShadow: `0 0 8px ${colors.red}` }} />
-                    <div style={{ position: "absolute", top: minutesToTop(nowMinutes, startHour), left: 0, right: 0, height: 0, borderTop: `2px solid ${colors.red}`, zIndex: 3 }} />
+                    <div style={{ position: "absolute", top: minutesToTop(nowMinutes) - 4, left: -4, width: 9, height: 9, borderRadius: "50%", background: colors.red, zIndex: 4, boxShadow: `0 0 8px ${colors.red}` }} />
+                    <div style={{ position: "absolute", top: minutesToTop(nowMinutes), left: 0, right: 0, height: 0, borderTop: `2px solid ${colors.red}`, zIndex: 3 }} />
                   </>
                 )}
 
                 {week.events
                   .filter((e) => e.dayIndex === dayIndex)
                   .map((e, i) => {
-                    const top = minutesToTop(e.startMinutes, startHour);
+                    const top = minutesToTop(e.startMinutes);
                     const height = Math.max(16, ((e.endMinutes - e.startMinutes) / 60) * HOUR_PX);
                     const c = colorForType(e.type);
                     const isBlock = e.type === "block";
