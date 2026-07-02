@@ -1,0 +1,85 @@
+# Production stack for the Mac mini (OrbStack): Postgres + API + the two static frontends,
+# running together. Matches the habitquest prod stack's style (restart: unless-stopped,
+# values from a gitignored .env.prod).
+#
+# Start it with:
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+#
+# Host-specific values and secrets (VITE_API_URL, DISPLAY_TZ, Google creds) come from
+# .env.prod (gitignored). See .env.prod.example.
+#
+# Names are suffixed -prod-* so they never collide with the dev docker-compose.yml
+# (dayboard-db / dayboard-pgdata) or with the habitquest stack.
+
+services:
+  db:
+    image: postgres:16
+    container_name: dayboard-prod-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dayboard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dayboard}
+      POSTGRES_DB: dayboard
+    volumes:
+      - dayboard-prod-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dayboard -d dayboard"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # No host port published: only the API (same compose network) needs the DB.
+    # This satisfies NFR-SEC-1 — the DB is unreachable off the Mini.
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: dayboard-prod-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://dayboard:${POSTGRES_PASSWORD:-dayboard}@db:5432/dayboard
+      API_PORT: "3000"
+      TZ: ${DISPLAY_TZ:-UTC}
+      DISPLAY_TZ: ${DISPLAY_TZ:-UTC}
+      SYNC_INTERVAL_MS: ${SYNC_INTERVAL_MS:-45000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://127.0.0.1:53682/oauth2callback}
+    # Bound to the Mini's interfaces; reached over the tailnet (and LAN). Not forwarded
+    # to the public internet (NFR-SEC-1). habitquest already uses 3001, so 3000 is free.
+    ports:
+      - "${API_HOST_PORT:-3000}:3000"
+
+  display:
+    build:
+      context: .
+      dockerfile: apps/display/Dockerfile
+      args:
+        # VITE_API_URL is compiled into the bundle here. Change it -> rebuild this image.
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: dayboard-prod-display
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${DISPLAY_HOST_PORT:-4173}:80"
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_DISPLAY_URL: ${VITE_DISPLAY_URL}
+    container_name: dayboard-prod-admin
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${ADMIN_HOST_PORT:-4174}:80"
+
+volumes:
+  dayboard-prod-data:

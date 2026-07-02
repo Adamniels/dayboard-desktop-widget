@@ -1,0 +1,19 @@
+# Keep build contexts small and secrets out of images.
+node_modules
+**/node_modules
+.pnpm-store
+dist
+**/dist
+build
+**/build
+*.tsbuildinfo
+.git
+.env
+.env.*
+!.env.example
+secrets
+**/test-results.json
+*.log
+.DS_Store
+Dayboard Interactive Prototype
+Dayboard Interactive Prototype.zip

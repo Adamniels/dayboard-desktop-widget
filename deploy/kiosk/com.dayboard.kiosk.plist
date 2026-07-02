@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Dayboard kiosk LaunchAgent.
+
+  Install (as the logged-in desktop user on the Mini):
+    cp deploy/kiosk/dayboard-kiosk.sh ~/dayboard-kiosk.sh
+    chmod +x ~/dayboard-kiosk.sh
+    cp deploy/kiosk/com.dayboard.kiosk.plist ~/Library/LaunchAgents/
+    # Edit the two paths below if you put the script somewhere else, then:
+    launchctl load -w ~/Library/LaunchAgents/com.dayboard.kiosk.plist
+
+  Stop / uninstall:
+    launchctl unload -w ~/Library/LaunchAgents/com.dayboard.kiosk.plist
+
+  RunAtLoad starts it at login; KeepAlive relaunches Chrome if the window is closed or
+  crashes (a wall display should always be up). Edit DAYBOARD_DISPLAY_URL if you changed
+  DISPLAY_HOST_PORT.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dayboard.kiosk</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/homeserver/dayboard-kiosk.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>DAYBOARD_DISPLAY_URL</key>
+        <string>http://localhost:4173</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ProcessType</key>
+    <string>Interactive</string>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/dayboard-kiosk.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/dayboard-kiosk.err.log</string>
+</dict>
+</plist>
