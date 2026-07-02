@@ -12,6 +12,7 @@ import { occurrencesToEvents, selectionToDraft, moveResizeToPatch, type EventDra
 import { colorForType, colors, hexA } from "./theme";
 import type { EventType, OccurrenceDTO, ProjectRow } from "./types";
 import { GhostButton, Label, PageHeading, PrimaryButton, Select, TextInput, card } from "./ui";
+import { useConfirmDelete } from "./confirm";
 
 const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -134,6 +135,7 @@ export function CalendarTab({ projects, onChanged }: { projects: ProjectRow[]; o
 const TYPES: { key: EventType; label: string }[] = [
   { key: "meeting", label: "Meeting" },
   { key: "block", label: "Focus block" },
+  { key: "general", label: "General" },
 ];
 
 function Editor({
@@ -156,6 +158,7 @@ function Editor({
   const [projectId, setProjectId] = useState("");
   const [recurringLocked, setRecurringLocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { dialog, confirmDelete } = useConfirmDelete();
 
   useEffect(() => {
     if (!editingId) return;
@@ -188,6 +191,7 @@ function Editor({
 
   async function remove() {
     if (!editingId) return;
+    if (!(await confirmDelete("event", title))) return;
     await deleteEvent(editingId);
     onSaved();
   }
@@ -195,7 +199,9 @@ function Editor({
   const fieldCol: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 6 };
 
   return (
-    <div style={{ ...card, padding: 20, display: "flex", flexDirection: "column", gap: 16, animation: "dbPop .2s ease" }}>
+    <>
+      {dialog}
+      <div style={{ ...card, padding: 20, display: "flex", flexDirection: "column", gap: 16, animation: "dbPop .2s ease" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 15, fontWeight: 600 }}>{editingId ? "Edit event" : "New event"}</span>
         <button onClick={onCancel} style={{ width: 28, height: 28, borderRadius: 8, border: `1px solid ${colors.border}`, background: "transparent", color: colors.textMuted, cursor: "pointer" }}>✕</button>
@@ -232,7 +238,8 @@ function Editor({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      {/* Stacked full-width so the datetime value never clips in the 380px panel (FR-EVT-3). */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
         <div style={fieldCol}>
           <Label>Start</Label>
           <TextInput type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
@@ -266,6 +273,7 @@ function Editor({
         <PrimaryButton onClick={save} disabled={!title || !start || !end} style={{ flex: 1 }}>Save event</PrimaryButton>
         {editingId && <GhostButton onClick={remove} style={{ border: `1px solid ${hexA(colors.red, 0.3)}`, background: hexA(colors.red, 0.1), color: colors.redText }}>Delete</GhostButton>}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

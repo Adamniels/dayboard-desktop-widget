@@ -20,17 +20,21 @@ off by Adam.
 | FR-EVT-1 | US-EVT1 | Event CRUD endpoints, single-user scoped | Auto | Todo |
 | FR-EVT-2 | US-EVT1 | Event type validated (meeting \| block \| general) | Auto | Todo |
 | FR-EVT-3 | US-EVT2 | Interactive admin week calendar: drag-create/move/resize | Auto + Review | Todo |
+| FR-EVT-4 | US-EVT1 | Deleting an event asks for confirmation first | Auto + Review | Todo |
 | FR-VIEW-1 | US-VIEW1 | Weekly view groups events correctly | Auto + Review | Todo |
 | FR-VIEW-2 | US-VIEW1 | Portrait and landscape verified on device | Manual | Todo |
 | FR-RT-1 | US-VIEW1 | Data change emits WebSocket message | Auto | Todo |
 | FR-PROJ-1 | US-TODO1 | Project CRUD endpoints | Auto | Todo |
+| FR-PROJ-2 | US-TODO1 | Deleting a project confirms; states to-dos go with it | Auto + Review | Todo |
 | FR-TODO-1 | US-TODO1 | Todo CRUD with status under a project | Auto | Todo |
 | FR-TODO-2 | US-TODO1 | Todos surface only inside a linked block | Auto | Todo |
+| FR-TODO-3 | US-TODO1 | Deleting a to-do asks for confirmation first | Auto + Review | Todo |
 | FR-REM-1 | US-REM1 | Absolute reminder fires at the right instant | Auto | Todo |
 | FR-REM-2 | US-REM1 | Relative timer computes fire time from now | Auto | Todo |
 | FR-REM-3 | US-REM1 | Recurring reminder computes next occurrence | Auto | Todo |
 | FR-REM-4 | US-REM1 | Fire produces display takeover payload | Auto + Review | Todo |
 | FR-NOTE-1 | US-NOTE1 | Note CRUD, general or project-linked | Auto | Todo |
+| FR-NOTE-2 | US-NOTE1 | Deleting a note asks for confirmation first | Auto + Review | Todo |
 | FR-VIEW-3 | US-VIEW2 | Day/month buckets; active view switch | Auto + Review | Todo |
 | NFR-REL-1 | US-NFR1 | Works against local DB when Google is down | Auto | Todo |
 | NFR-SEC-1 | US-NFR1 | Admin bound to Tailscale; no public port; no login (v1) | Review | Todo |

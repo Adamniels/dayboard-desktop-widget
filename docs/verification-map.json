@@ -65,6 +65,13 @@
       "testMatch": [{ "file": "admin", "name": "interactive week calendar" }]
     },
     {
+      "id": "FR-EVT-4",
+      "story": "US-EVT1",
+      "type": "auto+review",
+      "verify": "Deleting an event confirms first: dialog copy names the target and offers Delete; cancel path leaves the event intact (reviewed live).",
+      "testMatch": [{ "file": "confirm", "name": "delete confirmation" }]
+    },
+    {
       "id": "FR-VIEW-1",
       "story": "US-VIEW1",
       "type": "auto+review",
@@ -92,6 +99,13 @@
       "testMatch": [{ "file": "api.integration", "name": "project crud" }]
     },
     {
+      "id": "FR-PROJ-2",
+      "story": "US-TODO1",
+      "type": "auto+review",
+      "verify": "Deleting a project confirms first and the dialog states its to-dos go with it; cancel path leaves it intact (reviewed live).",
+      "testMatch": [{ "file": "confirm", "name": "delete confirmation" }]
+    },
+    {
       "id": "FR-TODO-1",
       "story": "US-TODO1",
       "type": "auto",
@@ -104,6 +118,13 @@
       "type": "auto",
       "verify": "surfaceTodos(now, events, todos) returns a project's open todos only inside a linked block.",
       "testMatch": [{ "file": "core", "name": "surface todos during linked block" }]
+    },
+    {
+      "id": "FR-TODO-3",
+      "story": "US-TODO1",
+      "type": "auto+review",
+      "verify": "Deleting a to-do confirms first; cancel path leaves it intact (reviewed live).",
+      "testMatch": [{ "file": "confirm", "name": "delete confirmation" }]
     },
     {
       "id": "FR-REM-1",
@@ -139,6 +160,13 @@
       "type": "auto",
       "verify": "Note CRUD, general or linked to a project.",
       "testMatch": [{ "file": "api.integration", "name": "note crud" }]
+    },
+    {
+      "id": "FR-NOTE-2",
+      "story": "US-NOTE1",
+      "type": "auto+review",
+      "verify": "Deleting a note confirms first; cancel path leaves it intact (reviewed live).",
+      "testMatch": [{ "file": "confirm", "name": "delete confirmation" }]
     },
     {
       "id": "FR-VIEW-3",

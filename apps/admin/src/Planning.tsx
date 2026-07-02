@@ -28,6 +28,7 @@ import {
 import { colors, hexA } from "./theme";
 import type { DisplayView, NoteRow, ProjectRow, ReminderRow, SyncStatus, TimerRow, TodoRow } from "./types";
 import { GhostButton, PageHeading, PrimaryButton, Select, TextInput, Textarea, card } from "./ui";
+import { useConfirmDelete } from "./confirm";
 
 // ---------- Projects ----------
 
@@ -66,6 +67,7 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
   const [open, setOpen] = useState(false);
   const [todos, setTodos] = useState<TodoRow[]>([]);
   const [draft, setDraft] = useState("");
+  const { dialog, confirmDelete } = useConfirmDelete();
   const load = () => getTodos(project.id).then(setTodos).catch(() => setTodos([]));
   useEffect(() => {
     if (open) void load();
@@ -75,7 +77,9 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
   const dot = project.color ?? colors.accent;
 
   return (
-    <div style={{ ...card, padding: 0, overflow: "hidden" }}>
+    <>
+      {dialog}
+      <div style={{ ...card, padding: 0, overflow: "hidden" }}>
       <button onClick={() => setOpen((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: "transparent", border: "none", padding: "16px 18px", cursor: "pointer", color: colors.text }}>
         <span style={{ width: 11, height: 11, borderRadius: 4, background: dot, flex: "0 0 auto" }} />
         <span style={{ fontSize: 15, fontWeight: 600, flex: 1 }}>{project.name}</span>
@@ -83,6 +87,7 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
         <button
           onClick={async (e) => {
             e.stopPropagation();
+            if (!(await confirmDelete("project", project.name))) return;
             await deleteProject(project.id);
             onChanged();
           }}
@@ -108,7 +113,7 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
                   {done ? "✓" : ""}
                 </button>
                 <span style={{ fontSize: 14, flex: 1, color: done ? colors.textFaint : "rgba(255,255,255,.9)", textDecoration: done ? "line-through" : "none" }}>{t.title}</span>
-                <button onClick={async () => { await deleteTodo(t.id); void load(); }} style={{ background: "transparent", border: "none", color: colors.textFaint, cursor: "pointer" }}>×</button>
+                <button onClick={async () => { if (!(await confirmDelete("todo", t.title))) return; await deleteTodo(t.id); void load(); }} style={{ background: "transparent", border: "none", color: colors.textFaint, cursor: "pointer" }}>×</button>
               </div>
             );
           })}
@@ -124,7 +129,8 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 
   async function addTodo() {
@@ -305,13 +311,16 @@ export function NotesTab({ projects }: { projects: ProjectRow[] }) {
   const [notes, setNotes] = useState<NoteRow[]>([]);
   const [body, setBody] = useState("");
   const [pid, setPid] = useState("");
+  const { dialog, confirmDelete } = useConfirmDelete();
   const load = () => getNotes().then(setNotes).catch(() => setNotes([]));
   useEffect(() => { void load(); }, []);
 
   const projName = (id: string | null) => (id ? projects.find((p) => p.id === id)?.name ?? "Project" : null);
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <>
+      {dialog}
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
       <PageHeading title="Notes" subtitle="General notes, or attach one to a project." />
       <div style={{ ...card, marginBottom: 18 }}>
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write a note…" />
@@ -331,13 +340,14 @@ export function NotesTab({ projects }: { projects: ProjectRow[] }) {
             <div style={{ fontSize: 13.5, lineHeight: 1.55, color: "rgba(255,255,255,.82)", fontFamily: "ui-monospace, monospace" }}>{n.body}</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 7, color: n.projectId ? "#fff" : colors.textDim, background: n.projectId ? hexA(colors.accent, 0.22) : colors.surfaceUp }}>{projName(n.projectId) ?? "General"}</span>
-              <button onClick={async () => { await deleteNote(n.id); void load(); }} style={{ fontSize: 11.5, color: colors.textFaint, background: "transparent", border: "none", cursor: "pointer" }}>Delete</button>
+              <button onClick={async () => { if (!(await confirmDelete("note", n.body))) return; await deleteNote(n.id); void load(); }} style={{ fontSize: 11.5, color: colors.textFaint, background: "transparent", border: "none", cursor: "pointer" }}>Delete</button>
             </div>
           </div>
         ))}
         {notes.length === 0 && <div style={{ fontSize: 13.5, color: colors.textDim }}>No notes yet.</div>}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

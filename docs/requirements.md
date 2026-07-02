@@ -35,6 +35,8 @@ live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
   direct manipulation: dragging on the grid to create (prefilling the editor), clicking an
   event to edit, dragging to move, and dragging edges to resize. Recurring events are not
   draggable (recurrence is read-only in v1, per FR-CAL-6).
+- **FR-EVT-4** The admin shall require an explicit confirmation before deleting an event, so
+  a single click cannot destroy a plan by accident.
 
 ### FR-VIEW — Display views
 - **FR-VIEW-1** The display shall show a weekly view of events by default.
@@ -50,11 +52,14 @@ live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
 ### FR-PROJ — Projects
 - **FR-PROJ-1** Adam shall create and manage projects that act as containers for to
   dos.
+- **FR-PROJ-2** The admin shall require an explicit confirmation before deleting a project,
+  making clear that its to dos are removed with it.
 
 ### FR-TODO — To dos
 - **FR-TODO-1** Adam shall create to dos under a project, each with a status.
 - **FR-TODO-2** While the current time falls inside an event linked to a project, the
   display shall surface that project's open to dos at the top.
+- **FR-TODO-3** The admin shall require an explicit confirmation before deleting a to do.
 
 ### FR-REM — Reminders and timers
 - **FR-REM-1** Adam shall create a reminder at an absolute clock time.
@@ -66,6 +71,7 @@ live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
 
 ### FR-NOTE — Notes
 - **FR-NOTE-1** Adam shall create notes, either general or linked to a project.
+- **FR-NOTE-2** The admin shall require an explicit confirmation before deleting a note.
 
 ## Phase 3 — More views and polish
 

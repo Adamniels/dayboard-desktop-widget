@@ -33,12 +33,14 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
 ## Epic: Events
 
 ### US-EVT1 — Plan my day with blocks and meetings
-**Covers:** FR-EVT-1, FR-EVT-2
+**Covers:** FR-EVT-1, FR-EVT-2, FR-EVT-4
 
 - **Given** I am in the admin app
-- **When** I create, edit, or delete an event and set its type to meeting or block
+- **When** I create, edit, or delete an event and set its type to meeting, block, or general
 - **Then** it persists, pushes to Google, and the display shows blocks and meetings
   styled differently.
+- **And** when I click Delete on an event, I am asked to confirm first, and nothing is
+  deleted if I cancel.
 
 ### US-EVT2 — Plan visually on a calendar
 **Covers:** FR-EVT-3
@@ -61,12 +63,14 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
 ## Epic: Projects and to dos
 
 ### US-TODO1 — Tasks surface when I'm working on them
-**Covers:** FR-PROJ-1, FR-TODO-1, FR-TODO-2
+**Covers:** FR-PROJ-1, FR-PROJ-2, FR-TODO-1, FR-TODO-2, FR-TODO-3
 
 - **Given** I have a project with open to dos and a time block linked to that project
 - **When** the current time enters that block
 - **Then** the project's open to dos appear at the top of the display; outside the
   block they stay in the backlog.
+- **And** deleting a project or a to do asks me to confirm first, and the project
+  confirmation makes clear its to dos go with it.
 
 ## Epic: Reminders and timers
 
@@ -82,12 +86,13 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
 ## Epic: Notes
 
 ### US-NOTE1 — Keep context next to my plan
-**Covers:** FR-NOTE-1
+**Covers:** FR-NOTE-1, FR-NOTE-2
 
 - **Given** I want to jot something down
 - **When** I write a note, general or attached to a project
 - **Then** it is saved and visible in the admin (and surfaced with its project where
   relevant).
+- **And** deleting a note asks me to confirm first.
 
 ## Epic: Views
 
