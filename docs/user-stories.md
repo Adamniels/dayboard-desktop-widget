@@ -86,13 +86,17 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
 ## Epic: Notes
 
 ### US-NOTE1 — Keep context next to my plan
-**Covers:** FR-NOTE-1, FR-NOTE-2
+**Covers:** FR-NOTE-1, FR-NOTE-2, FR-NOTE-3, FR-NOTE-4
 
 - **Given** I want to jot something down
 - **When** I write a note, general or attached to a project
 - **Then** it is saved and visible in the admin (and surfaced with its project where
   relevant).
 - **And** deleting a note asks me to confirm first.
+- **And** the note renders with its line breaks, bold, bullet lists, and links intact on
+  both the admin and the display.
+- **And** I can edit an existing note's text from the admin and the change persists and
+  appears on the display.
 
 ## Epic: Views
 

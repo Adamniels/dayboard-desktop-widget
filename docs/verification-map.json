@@ -169,6 +169,20 @@
       "testMatch": [{ "file": "confirm", "name": "delete confirmation" }]
     },
     {
+      "id": "FR-NOTE-3",
+      "story": "US-NOTE1",
+      "type": "auto",
+      "verify": "Basic markdown parser keeps line breaks and handles bold/italic/bullets and safe links; unsafe schemes are shown literally.",
+      "testMatch": [{ "file": "markdown", "name": "note markdown" }]
+    },
+    {
+      "id": "FR-NOTE-4",
+      "story": "US-NOTE1",
+      "type": "auto+review",
+      "verify": "Admin edits an existing note via PATCH /notes/:id (covered by note crud); inline edit/save flow reviewed live.",
+      "testMatch": [{ "file": "api.integration", "name": "note crud" }]
+    },
+    {
       "id": "FR-VIEW-3",
       "story": "US-VIEW2",
       "type": "auto+review",

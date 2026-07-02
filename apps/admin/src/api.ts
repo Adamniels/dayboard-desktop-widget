@@ -98,6 +98,8 @@ function send<T>(method: string, path: string, body?: unknown): Promise<T> {
 // projects + todos
 export const getProjects = () => send<ProjectRow[]>("GET", "/projects");
 export const createProject = (name: string) => send<ProjectRow>("POST", "/projects", { name });
+export const updateProject = (id: string, patch: { name?: string; color?: string | null; archived?: boolean }) =>
+  send<ProjectRow>("PATCH", `/projects/${id}`, patch);
 export const deleteProject = (id: string) => fetch(`${BASE}/projects/${id}`, { method: "DELETE" });
 export const getTodos = (projectId: string) => send<TodoRow[]>("GET", `/projects/${projectId}/todos`);
 export const createTodo = (projectId: string, title: string) =>
@@ -110,6 +112,8 @@ export const deleteTodo = (id: string) => fetch(`${BASE}/todos/${id}`, { method:
 export const getNotes = () => send<NoteRow[]>("GET", "/notes");
 export const createNote = (body: string, projectId: string | null) =>
   send<NoteRow>("POST", "/notes", { body, projectId });
+export const updateNote = (id: string, patch: { body?: string; projectId?: string | null }) =>
+  send<NoteRow>("PATCH", `/notes/${id}`, patch);
 export const deleteNote = (id: string) => fetch(`${BASE}/notes/${id}`, { method: "DELETE" });
 
 // reminders

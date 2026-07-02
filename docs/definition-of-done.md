@@ -35,6 +35,8 @@ off by Adam.
 | FR-REM-4 | US-REM1 | Fire produces display takeover payload | Auto + Review | Todo |
 | FR-NOTE-1 | US-NOTE1 | Note CRUD, general or project-linked | Auto | Todo |
 | FR-NOTE-2 | US-NOTE1 | Deleting a note asks for confirmation first | Auto + Review | Todo |
+| FR-NOTE-3 | US-NOTE1 | Notes render as basic markdown (breaks, bold, lists, safe links) | Auto | Todo |
+| FR-NOTE-4 | US-NOTE1 | Editing an existing note's text persists | Auto + Review | Todo |
 | FR-VIEW-3 | US-VIEW2 | Day/month buckets; active view switch | Auto + Review | Todo |
 | NFR-REL-1 | US-NFR1 | Works against local DB when Google is down | Auto | Todo |
 | NFR-SEC-1 | US-NFR1 | Admin bound to Tailscale; no public port; no login (v1) | Review | Todo |

@@ -24,11 +24,13 @@ import {
   setReminderEnabled,
   setTodoStatus,
   startTimer,
+  updateNote,
 } from "./api";
 import { colors, hexA } from "./theme";
 import type { DisplayView, NoteRow, ProjectRow, ReminderRow, SyncStatus, TimerRow, TodoRow } from "./types";
 import { GhostButton, PageHeading, PrimaryButton, Select, TextInput, Textarea, card } from "./ui";
 import { useConfirmDelete } from "./confirm";
+import { Markdown } from "./Markdown";
 
 // ---------- Projects ----------
 
@@ -336,18 +338,73 @@ export function NotesTab({ projects }: { projects: ProjectRow[] }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {notes.map((n) => (
-          <div key={n.id} style={{ ...card, padding: 15, borderRadius: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ fontSize: 13.5, lineHeight: 1.55, color: "rgba(255,255,255,.82)", fontFamily: "ui-monospace, monospace" }}>{n.body}</div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 7, color: n.projectId ? "#fff" : colors.textDim, background: n.projectId ? hexA(colors.accent, 0.22) : colors.surfaceUp }}>{projName(n.projectId) ?? "General"}</span>
-              <button onClick={async () => { if (!(await confirmDelete("note", n.body))) return; await deleteNote(n.id); void load(); }} style={{ fontSize: 11.5, color: colors.textFaint, background: "transparent", border: "none", cursor: "pointer" }}>Delete</button>
-            </div>
-          </div>
+          <NoteCard
+            key={n.id}
+            note={n}
+            projLabel={projName(n.projectId) ?? "General"}
+            hasProject={n.projectId != null}
+            confirmDelete={confirmDelete}
+            reload={load}
+          />
         ))}
         {notes.length === 0 && <div style={{ fontSize: 13.5, color: colors.textDim }}>No notes yet.</div>}
       </div>
       </div>
     </>
+  );
+}
+
+function NoteCard({
+  note,
+  projLabel,
+  hasProject,
+  confirmDelete,
+  reload,
+}: {
+  note: NoteRow;
+  projLabel: string;
+  hasProject: boolean;
+  confirmDelete: (kind: "note", label: string) => Promise<boolean>;
+  reload: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(note.body);
+
+  async function save() {
+    const body = draft.trim();
+    if (!body || body === note.body) {
+      setDraft(note.body);
+      setEditing(false);
+      return;
+    }
+    await updateNote(note.id, { body });
+    setEditing(false);
+    reload();
+  }
+
+  return (
+    <div style={{ ...card, padding: 15, borderRadius: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+      {editing ? (
+        <>
+          <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus />
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <GhostButton onClick={() => { setDraft(note.body); setEditing(false); }} style={{ height: 34 }}>Cancel</GhostButton>
+            <PrimaryButton onClick={save} style={{ height: 34 }}>Save</PrimaryButton>
+          </div>
+        </>
+      ) : (
+        <Markdown source={note.body} style={{ fontSize: 13.5, lineHeight: 1.55, color: "rgba(255,255,255,.82)" }} />
+      )}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 7, color: hasProject ? "#fff" : colors.textDim, background: hasProject ? hexA(colors.accent, 0.22) : colors.surfaceUp }}>{projLabel}</span>
+        <div style={{ display: "flex", gap: 12 }}>
+          {!editing && (
+            <button onClick={() => { setDraft(note.body); setEditing(true); }} style={{ fontSize: 11.5, color: colors.textFaint, background: "transparent", border: "none", cursor: "pointer" }}>Edit</button>
+          )}
+          <button onClick={async () => { if (!(await confirmDelete("note", note.body))) return; await deleteNote(note.id); reload(); }} style={{ fontSize: 11.5, color: colors.textFaint, background: "transparent", border: "none", cursor: "pointer" }}>Delete</button>
+        </div>
+      </div>
+    </div>
   );
 }
 

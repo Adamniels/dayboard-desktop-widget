@@ -2,6 +2,7 @@
 // and notes. Read only. Transcribed from the prototype's panel; reads theme tokens (Phase 3
 // polish).
 import { nowNext, type Occurrence } from "@dayboard/core";
+import { Markdown } from "./Markdown";
 import { card, colors, font, hexA } from "./theme";
 import type { NoteDTO, OccurrenceDTO, TimerDTO, TodoDTO } from "./types";
 import { tzParts } from "./week";
@@ -62,9 +63,7 @@ export function SidePanel({
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {notes.map((n) => (
-              <div key={n.id} style={{ fontSize: font.body, color: "rgba(255,255,255,.8)" }}>
-                {n.body}
-              </div>
+              <Markdown key={n.id} source={n.body} style={{ fontSize: font.body, color: "rgba(255,255,255,.8)" }} />
             ))}
           </div>
         )}

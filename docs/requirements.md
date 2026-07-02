@@ -72,6 +72,10 @@ live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
 ### FR-NOTE — Notes
 - **FR-NOTE-1** Adam shall create notes, either general or linked to a project.
 - **FR-NOTE-2** The admin shall require an explicit confirmation before deleting a note.
+- **FR-NOTE-3** Note text shall render as basic markdown — preserving line breaks and
+  supporting bold, italic, bullet lists, and safe (http/https/mailto) links — in both the
+  admin and the display.
+- **FR-NOTE-4** Adam shall edit the text of an existing note from the admin app.
 
 ## Phase 3 — More views and polish
 
