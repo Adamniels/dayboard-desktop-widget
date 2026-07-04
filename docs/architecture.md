@@ -54,8 +54,9 @@ display and admin never talk to each other — both talk only to the api.
 ## Data model (entities)
 
 See `.claude/memory/decisions/unified-event-model.md` for the authoritative version.
-Event (unified, `type`, optional `googleEventId`, optional `projectId`) · Project ·
-Todo (belongs to Project, surfaces during a linked time block) · Reminder
+Event (unified, `type`, optional `googleEventId`, optional `projectId`) · Project
+(optional display `color`) · Todo (belongs to Project, surfaces during a linked time
+block) · Reminder
 (absolute/relative time, optional recurrence) · Note (general or project-linked) ·
 DisplaySetting (singleton row holding the admin-chosen active view: day, week, or month;
 migration 0003).
@@ -74,6 +75,13 @@ turn the buckets into pixels. The day and week grids span the full 00:00–24:00
 keep the now line centered, clamped so the window never runs past midnight or the end of day
 (`nowScrollTop` + the `useNowScroll` hook); the month view is unaffected. `App` fetches per-view windows and re-renders on the `display.changed`
 WebSocket message so an admin view switch propagates within about a second.
+
+Event coloring follows one rule everywhere: the api's read models (occurrences, `/notes`,
+`/surfaced`) carry the linked project's `projectColor`, and the display resolves the final
+color with the pure `resolveEventColor` in `packages/core` — project color wins, the
+per-app type color (`colorForType`) is the fallback. The admin's FullCalendar grid
+deliberately stays colored by type; project color shows in the admin via the project
+dot, todo checkboxes, and note chips (FR-PROJ-4).
 
 The **admin** is the dark "Control Room": a sidebar (Calendar, Projects, Reminders &
 timers, Notes, Display & sync) over tab components that drive the REST API. The

@@ -3,6 +3,15 @@
 Phased so each stage is demonstrable on its own. Requirement IDs link to
 `docs/requirements.md`.
 
+## Where we are (2026-07-04)
+
+Phases 0 through 3 are shipped, including Phase 3.1 (the interactive admin calendar,
+`docs/phases/phase-3.1-admin-calendar-plan.md`) and the post-MVP fixes round
+(delete confirmations, event editor fit plus the General type, notes markdown and
+inline editing, project rename and color — `docs/mvp-fixes-plan.md`). Phase 4 (AI
+inside the product) is the next horizon and is still unscoped. As always,
+`docs/STATUS.md` is the live truth on what actually passes.
+
 ## Design reference (read before any UI phase)
 
 The approved interactive prototype at `Dayboard Interactive Prototype/Dayboard.dc.html`

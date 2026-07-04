@@ -38,6 +38,7 @@ conversation.
 - [PostgreSQL over SQLite](decisions/postgresql-over-sqlite.md) — Adam's call; production-grade engine.
 - [Datetime + recurrence model](decisions/datetime-recurrence-model.md) — events are absolute datetimes + timezone with recurrence expanded to occurrences; the prototype's weekday-index shape is not the schema.
 - [Display active view setting](decisions/display-active-view-setting.md) — admin picks one active view via a display_setting singleton; PATCH /display broadcasts display.changed and the kiosk switches.
+- [Project color read model](decisions/project-color-read-model.md) — projectColor rides the api read models; resolveEventColor in core (project wins, type falls back); admin grid stays type-colored.
 
 ## Conventions
 

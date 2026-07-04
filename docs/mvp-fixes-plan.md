@@ -1,6 +1,8 @@
 # Dayboard — Post-MVP Fixes & Additions Plan
 
-Status: proposed (not yet implemented). Owner: Adam. Drafted 2026-07-02.
+Status: **complete** — all phases implemented (item 6 dropped as already working).
+Owner: Adam. Drafted 2026-07-02; finished 2026-07-04. See the Outcome section at the
+bottom for what shipped and the final requirement IDs.
 
 This plan turns eight post-MVP items into ordered, testable phases. It follows the
 project's spec-driven rule: every item gets a requirement ID, a passing test, and a
@@ -9,16 +11,16 @@ all changes uncommitted for Adam to review.
 
 ## Summary of the eight items
 
-| # | Item | Verdict after code review | Effort |
-|---|------|---------------------------|--------|
-| 1 | "Are you sure?" on delete | Absent everywhere. Build it. | Small |
-| 2 | Date/time doesn't fit in the box | Real layout bug in the event editor. | Tiny |
-| 3 | A "normal" event type | The `general` type already exists in data; just expose it. | Tiny |
-| 4 | Notes must respect line breaks | Absent; upgrade to basic markdown. | Small |
-| 5 | Must be able to update notes | Backend ready; wire admin UI. | Small |
-| 6 | Portrait/landscape switch | **Already works** (auto-detect). Dropped. | — |
-| 7 | Edit project name | Backend ready; add inline rename. | Small |
-| 8 | Color on projects | `color` field exists; wire picker + apply everywhere. | Medium |
+| # | Item | Verdict after code review | Outcome |
+|---|------|---------------------------|---------|
+| 1 | "Are you sure?" on delete | Absent everywhere. Build it. | **Done** — FR-EVT-4, FR-PROJ-2, FR-TODO-3, FR-NOTE-2 |
+| 2 | Date/time doesn't fit in the box | Real layout bug in the event editor. | **Done** — fields stacked full width (no new ID; covered by FR-EVT-2/3) |
+| 3 | A "normal" event type | The `general` type already exists in data; just expose it. | **Done** — "General" in the editor's type toggle (covered by FR-EVT-2) |
+| 4 | Notes must respect line breaks | Absent; upgrade to basic markdown. | **Done** — FR-NOTE-3 |
+| 5 | Must be able to update notes | Backend ready; wire admin UI. | **Done** — FR-NOTE-4 |
+| 6 | Portrait/landscape switch | **Already works** (auto-detect). Dropped. | Dropped |
+| 7 | Edit project name | Backend ready; add inline rename. | **Done** — FR-PROJ-3 |
+| 8 | Color on projects | `color` field exists; wire picker + apply everywhere. | **Done** — FR-PROJ-4 |
 
 Item 6 is intentionally excluded: the display already auto-switches orientation from
 the screen dimensions (`apps/display/src/App.tsx`), which you confirmed is fine.
@@ -214,11 +216,40 @@ For each phase, before marking done:
 
 The `feature-spec-sync` skill can drive that upkeep after each feature lands.
 
-## Open questions
+## Open questions — resolved
 
-- **Item 2**: screenshot of the admin "add event" editor to confirm the fix fully
-  covers what you're seeing (nothing cramped besides the two datetime fields).
-- **Item 8 palette**: any specific colors you want in the preset set, or is a sensible
-  default palette fine?
-- **New requirement IDs**: the IDs above are proposals — say the word if your spec uses a
-  different numbering scheme and I'll align them.
+- **Item 2**: stacking the two datetime fields resolved the clipping; nothing else in
+  the editor was cramped.
+- **Item 8 palette**: the default 10-swatch set (teal, violet, indigo, sky, green,
+  amber, orange, rose, pink, slate) plus a free hex input, chosen 2026-07-04. The
+  admin FullCalendar grid stays colored by type; the display's surfaced todos and
+  notes do tint with the project color.
+- **New requirement IDs**: the proposed ad-hoc IDs were aligned to the existing area
+  scheme (see the mapping in the Outcome section below).
+
+## Outcome (2026-07-04)
+
+All five phases shipped; item 6 was dropped. The proposed requirement IDs in the phase
+sections above were aligned to the project's area scheme when each phase landed:
+
+| Proposed in this plan | Actual ID shipped |
+| --- | --- |
+| FR-DEL-1 | FR-EVT-4, FR-PROJ-2, FR-TODO-3, FR-NOTE-2 (one per deletable kind) |
+| FR-EVT-EDIT-1 | none — layout fix, covered by FR-EVT-2/FR-EVT-3 review |
+| FR-EVT-TYPE-3 | none — exposes the existing `general` type (FR-EVT-2) |
+| FR-NOTE-MD-1 | FR-NOTE-3 |
+| FR-NOTE-EDIT-1 | FR-NOTE-4 |
+| FR-PROJ-RENAME-1 | FR-PROJ-3 |
+| FR-PROJ-COLOR-1 | FR-PROJ-4 |
+
+Where things landed, briefly: the reusable confirm dialog is
+`apps/admin/src/confirm.tsx` + `confirm-model.ts` (unit tested); notes markdown is a
+dependency-free parser at `packages/shared/src/markdown.ts` (exported via the
+`@dayboard/shared/markdown` subpath) with a tiny per-app `Markdown.tsx` renderer;
+note editing is inline in the admin `NoteCard`; project rename and the color picker
+live in the admin `ProjectCard`; the color reaches the display through the api read
+models (occurrences, `/notes`, `/surfaced` all carry `projectColor`) and resolves via
+the pure `resolveEventColor` rule in `packages/core` (project color wins, type color
+falls back). The read-model approach from Phase 4c was chosen over client-side joins.
+
+Live verification state is `docs/STATUS.md`, as always.

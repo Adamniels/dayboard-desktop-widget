@@ -69,7 +69,7 @@ api must feed the screen.
   (`datetime-recurrence-model`). This is where you reject the prototype's time shape and
   set the real one.
 
-- **Phase 1 — Google integration spine.** Realizes the prototype's calendar: week view
+- **Phase 1 — Google integration spine.** Done. Realizes the prototype's calendar: week view
   with meeting vs block styling, the now line, day/week/month, and both orientations
   (FR-VIEW, FR-EVT, FR-RT). Replaces the prototype's fakes for real: the Google toggle
   becomes the actual two way sync engine (FR-CAL), the shared in browser state becomes
@@ -77,7 +77,7 @@ api must feed the screen.
   weekday indices become real occurrences. The prototype's event editor is the admin UX
   to match.
 
-- **Phase 2 — Planning layer.** Realizes the prototype's projects panel, the surfaced
+- **Phase 2 — Planning layer.** Done. Realizes the prototype's projects panel, the surfaced
   todos behavior, the reminders admin, the Pomodoro, the takeover overlay, and notes
   (FR-PROJ, FR-TODO, FR-REM, FR-NOTE). The big real addition the prototype hides: a
   reminder/timer **scheduler** on the Mini that fires on the real clock, instead of the
@@ -92,10 +92,17 @@ api must feed the screen.
   Calendar/Projects/Reminders/Notes/Display tabs). Day/night dimming was explicitly deferred to
   a later phase (see `docs/phases/phase-3-plan.md`).
 
-- **Phase 3.1 — Interactive admin calendar.** Beyond the prototype (which authored events from
-  a list plus a form): the admin Calendar tab becomes a Google-Calendar-style weekly grid on
+- **Phase 3.1 — Interactive admin calendar.** Done. Beyond the prototype (which authored events
+  from a list plus a form): the admin Calendar tab becomes a Google-Calendar-style weekly grid on
   FullCalendar, with drag to create, click to edit, and drag to move/resize (FR-EVT-3). See
   `docs/phases/phase-3.1-admin-calendar-plan.md`.
+
+- **Post-MVP fixes round (2026-07).** Done; all beyond the prototype, which had none of these:
+  delete confirmations on every destructive action, the stacked event editor datetime fields,
+  the exposed General event type, notes rendered as basic markdown with inline editing, and
+  project rename plus per-project color (the prototype colored events by type only; the real
+  app lets a linked project's color win, falling back to the type color). See
+  `docs/mvp-fixes-plan.md`.
 
 - **Phase 4 — AI inside the product.** Not in the prototype at all; future work.
 

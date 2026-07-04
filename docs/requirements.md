@@ -6,8 +6,10 @@ written in "shall" wording and carries an ID used by `docs/user-stories.md`,
 verification types are defined in
 `.claude/memory/context/requirement-id-scheme.md`.
 
-This is the living spec. Nothing here is implemented yet — `docs/STATUS.md` is the
-live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
+This is the living spec — `docs/STATUS.md` is the live truth on what actually passes.
+Phase grouping mirrors `docs/roadmap.md`; post-MVP additions (delete confirmations,
+notes markdown/editing, project rename/color — see `docs/mvp-fixes-plan.md`) sit in
+their area's section rather than a phase of their own.
 
 ## Phase 1 — Google integration spine
 
