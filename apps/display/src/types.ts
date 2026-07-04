@@ -5,6 +5,7 @@ export interface OccurrenceDTO {
   title: string;
   type: "meeting" | "block" | "general";
   projectId: string | null;
+  projectColor: string | null;
   start: string;
   end: string;
   isOverride: boolean;
@@ -24,6 +25,7 @@ export interface DisplayConfig {
 export interface TodoDTO {
   id: string;
   projectId: string | null;
+  projectColor: string | null;
   title: string;
   status: "open" | "in_progress" | "done";
   dueAt: string | null;
@@ -33,6 +35,7 @@ export interface NoteDTO {
   id: string;
   body: string;
   projectId: string | null;
+  projectColor: string | null;
 }
 
 export interface TimerDTO {

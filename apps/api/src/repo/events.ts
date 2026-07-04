@@ -5,7 +5,7 @@ import { schema, type Event, type NewEvent } from "@dayboard/shared";
 import { and, eq, gt, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
 import { db } from "../db";
 
-const { event, eventOverride } = schema;
+const { event, eventOverride, project } = schema;
 
 /** A flattened occurrence sent to the display (the renderVals contract, real datetimes). */
 export interface OccurrenceDTO {
@@ -13,6 +13,7 @@ export interface OccurrenceDTO {
   title: string;
   type: Event["type"];
   projectId: string | null;
+  projectColor: string | null;
   start: string;
   end: string;
   isOverride: boolean;
@@ -26,11 +27,20 @@ export interface RawOccurrence {
   title: string;
   type: Event["type"];
   projectId: string | null;
+  projectColor: string | null;
   start: Date;
   end: Date;
   isOverride: boolean;
   recurring: boolean;
   googleEventId: string | null;
+}
+
+/** Colors of the projects referenced by `projectIds`, for the occurrence read model (FR-PROJ-4). */
+async function projectColorMap(projectIds: (string | null)[]): Promise<Map<string, string | null>> {
+  const ids = [...new Set(projectIds.filter((id): id is string => id != null))];
+  if (ids.length === 0) return new Map();
+  const rows = await db.select({ id: project.id, color: project.color }).from(project).where(inArray(project.id, ids));
+  return new Map(rows.map((r) => [r.id, r.color]));
 }
 
 /** Expand events overlapping [from, to) into raw occurrences (Date instants). */
@@ -62,6 +72,8 @@ export async function listOccurrencesRaw(from: Date, to: Date, now: Date): Promi
     overridesByEvent.set(o.eventId, list);
   }
 
+  const colorByProject = await projectColorMap(rows.map((r) => r.projectId));
+
   const out: RawOccurrence[] = [];
   for (const row of rows) {
     const occurrences = expandOccurrences(
@@ -75,6 +87,7 @@ export async function listOccurrencesRaw(from: Date, to: Date, now: Date): Promi
         title: row.title,
         type: row.type,
         projectId: row.projectId,
+        projectColor: row.projectId ? colorByProject.get(row.projectId) ?? null : null,
         start: occ.start,
         end: occ.end,
         isOverride: occ.isOverride,
@@ -120,6 +133,8 @@ export async function listOccurrences(from: Date, to: Date, now: Date): Promise<
     overridesByEvent.set(o.eventId, list);
   }
 
+  const colorByProject = await projectColorMap(rows.map((r) => r.projectId));
+
   const out: OccurrenceDTO[] = [];
   for (const row of rows) {
     const occurrences = expandOccurrences(
@@ -139,6 +154,7 @@ export async function listOccurrences(from: Date, to: Date, now: Date): Promise<
         title: row.title,
         type: row.type,
         projectId: row.projectId,
+        projectColor: row.projectId ? colorByProject.get(row.projectId) ?? null : null,
         start: occ.start.toISOString(),
         end: occ.end.toISOString(),
         isOverride: occ.isOverride,

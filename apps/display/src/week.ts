@@ -41,6 +41,7 @@ export interface PositionedEvent {
   eventId: string;
   title: string;
   type: OccurrenceDTO["type"];
+  projectColor: string | null;
   dayIndex: number;
   startMinutes: number;
   endMinutes: number;
@@ -64,6 +65,7 @@ export function buildWeek(occurrences: OccurrenceDTO[], timezone: string): WeekM
       eventId: o.eventId,
       title: o.title,
       type: o.type,
+      projectColor: o.projectColor,
       dayIndex: start.weekdayIndex,
       startMinutes,
       endMinutes,

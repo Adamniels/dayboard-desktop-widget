@@ -8,6 +8,7 @@ function occ(partial: Partial<OccurrenceDTO> & Pick<OccurrenceDTO, "start" | "en
     title: "Deep work",
     type: "block",
     projectId: null,
+    projectColor: null,
     isOverride: false,
     recurring: false,
     googleEventId: null,

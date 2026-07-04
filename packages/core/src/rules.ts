@@ -38,6 +38,16 @@ export function surfaceTodos(now: Date, occurrences: LinkedOccurrence[], todos: 
 }
 
 /**
+ * FR-PROJ-4: resolve the color for an event box or accent. A linked project's color wins;
+ * otherwise the type color the caller derived (each app owns its own type palette). Blank
+ * or missing project colors fall back. Pure: data in, data out.
+ */
+export function resolveEventColor(projectColor: string | null | undefined, typeColor: string): string {
+  const c = projectColor?.trim();
+  return c ? c : typeColor;
+}
+
+/**
  * Derive the current and next occurrence for the now line and now/next card (lifted from
  * the prototype). `current` is the occurrence containing `now`; `next` is the soonest
  * occurrence that starts after `now`. Pure: `now` is passed in.

@@ -1,9 +1,9 @@
 // The display side panel: the now/next card, surfaced todos (FR-TODO-2), the Pomodoro ring,
 // and notes. Read only. Transcribed from the prototype's panel; reads theme tokens (Phase 3
 // polish).
-import { nowNext, type Occurrence } from "@dayboard/core";
+import { nowNext, resolveEventColor, type Occurrence } from "@dayboard/core";
 import { Markdown } from "./Markdown";
-import { card, colors, font, hexA } from "./theme";
+import { card, colorForType, colors, font, hexA } from "./theme";
 import type { NoteDTO, OccurrenceDTO, TimerDTO, TodoDTO } from "./types";
 import { tzParts } from "./week";
 
@@ -44,7 +44,7 @@ export function SidePanel({
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {surfaced.map((t) => (
               <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 11, padding: "7px 4px", fontSize: font.title }}>
-                <span style={{ width: 18, height: 18, borderRadius: 6, border: `1.5px solid ${hexA("#ffffff", 0.3)}`, flex: "0 0 auto" }} />
+                <span style={{ width: 18, height: 18, borderRadius: 6, border: `1.5px solid ${t.projectColor ? hexA(t.projectColor, 0.85) : hexA("#ffffff", 0.3)}`, flex: "0 0 auto" }} />
                 <span style={{ color: "rgba(255,255,255,.9)", fontWeight: 500 }}>{t.title}</span>
               </div>
             ))}
@@ -63,7 +63,9 @@ export function SidePanel({
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {notes.map((n) => (
-              <Markdown key={n.id} source={n.body} style={{ fontSize: font.body, color: "rgba(255,255,255,.8)" }} />
+              <div key={n.id} style={n.projectColor ? { borderLeft: `3px solid ${n.projectColor}`, paddingLeft: 9 } : undefined}>
+                <Markdown source={n.body} style={{ fontSize: font.body, color: "rgba(255,255,255,.8)" }} />
+              </div>
             ))}
           </div>
         )}
@@ -96,8 +98,14 @@ function NowNextCard({ occurrences, now, timezone }: { occurrences: OccurrenceDT
     cancelled: false,
   }));
   const { current, next } = nowNext(now, asOccurrences);
-  const titleFor = (occ: Occurrence | null) =>
-    occ ? occurrences.find((o) => o.start === occ.start.toISOString())?.title ?? "" : "";
+  const dtoFor = (occ: Occurrence | null): OccurrenceDTO | null =>
+    occ ? occurrences.find((o) => o.start === occ.start.toISOString()) ?? null : null;
+  const titleFor = (occ: Occurrence | null) => dtoFor(occ)?.title ?? "";
+  // Project color wins, else the type color — the same rule as the event boxes (FR-PROJ-4).
+  const accentFor = (occ: Occurrence | null): string | null => {
+    const dto = dtoFor(occ);
+    return dto ? resolveEventColor(dto.projectColor, colorForType(dto.type)) : null;
+  };
 
   const nowMin = minutesOf(now, timezone);
 
@@ -105,13 +113,17 @@ function NowNextCard({ occurrences, now, timezone }: { occurrences: OccurrenceDT
   if (current) {
     const s = minutesOf(current.start, timezone);
     const e = minutesOf(current.end, timezone);
+    const accent = accentFor(current);
     nowBlock = (
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", background: colors.red, boxShadow: `0 0 8px ${colors.red}` }} />
           <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".08em", color: "rgba(255,255,255,.45)", fontWeight: 600 }}>Now</span>
         </div>
-        <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-.01em", lineHeight: 1.15 }}>{titleFor(current)}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {accent && <span style={{ width: 9, height: 9, borderRadius: 3, background: accent, flex: "0 0 auto" }} />}
+          <span style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-.01em", lineHeight: 1.15 }}>{titleFor(current)}</span>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
           <span style={{ fontSize: 13, color: "rgba(255,255,255,.5)" }}>{shortTime(s)} – {shortTime(e)} {ampm(e)}</span>
           <span style={{ fontSize: 12, color: colors.redText, background: hexA(colors.red, 0.12), padding: "2px 8px", borderRadius: 6, fontWeight: 500 }}>{fmtLeft(Math.max(0, e - nowMin))}</span>
@@ -137,7 +149,10 @@ function NowNextCard({ occurrences, now, timezone }: { occurrences: OccurrenceDT
         <div style={{ paddingTop: 13, borderTop: `1px solid ${hexA("#ffffff", 0.07)}` }}>
           <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".08em", color: "rgba(255,255,255,.45)", fontWeight: 600, marginBottom: 7 }}>Up next</div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-.01em" }}>{titleFor(next)}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, fontWeight: 600, letterSpacing: "-.01em" }}>
+              {accentFor(next) && <span style={{ width: 8, height: 8, borderRadius: 3, background: accentFor(next)!, flex: "0 0 auto" }} />}
+              {titleFor(next)}
+            </span>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,.5)", whiteSpace: "nowrap" }}>{shortTime(minutesOf(next.start, timezone))} {ampm(minutesOf(next.start, timezone))}</span>
           </div>
           <div style={{ fontSize: 12, color: colors.accentSoft, marginTop: 3 }}>{fmtRel(Math.max(0, minutesOf(next.start, timezone) - nowMin))}</div>

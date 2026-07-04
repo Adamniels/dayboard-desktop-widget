@@ -12,6 +12,7 @@ export interface OccurrenceDTO {
   title: string;
   type: EventType;
   projectId: string | null;
+  projectColor: string | null;
   start: string;
   end: string;
   isOverride: boolean;

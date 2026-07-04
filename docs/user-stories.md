@@ -63,7 +63,7 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
 ## Epic: Projects and to dos
 
 ### US-TODO1 — Tasks surface when I'm working on them
-**Covers:** FR-PROJ-1, FR-PROJ-2, FR-TODO-1, FR-TODO-2, FR-TODO-3
+**Covers:** FR-PROJ-1, FR-PROJ-2, FR-PROJ-3, FR-PROJ-4, FR-TODO-1, FR-TODO-2, FR-TODO-3
 
 - **Given** I have a project with open to dos and a time block linked to that project
 - **When** the current time enters that block
@@ -71,6 +71,12 @@ requirement IDs it satisfies. Adam is the only user. Epics group by area.
   block they stay in the backlog.
 - **And** deleting a project or a to do asks me to confirm first, and the project
   confirmation makes clear its to dos go with it.
+- **And** I can click the project's name in the admin and rename it in place; Enter or
+  clicking away saves, Escape cancels, and a blank name changes nothing.
+- **And** when I give the project a color, its linked event boxes, the now/next card,
+  and its surfaced to dos and notes take that color on the display (and the admin's
+  dots, chips, and to do rows tint to match); events without a project color keep
+  their type color.
 
 ## Epic: Reminders and timers
 

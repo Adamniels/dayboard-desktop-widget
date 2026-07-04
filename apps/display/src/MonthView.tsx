@@ -1,6 +1,7 @@
 // The month view (FR-VIEW-3): a 6×7 grid of day cells with up to three event chips each then
 // a "+N" overflow, today highlighted and out-of-month days dimmed. No now line. Transcribed
 // from the prototype's `monthCells`. Reads the pure buildMonth bucketing and theme tokens.
+import { resolveEventColor } from "@dayboard/core";
 import type { DisplayConfig, OccurrenceDTO } from "./types";
 import { colorForType, colors, font, hexA, radii } from "./theme";
 import { buildMonth } from "./view";
@@ -53,7 +54,7 @@ export function MonthView({ config, occurrences, now }: Props) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0, overflow: "hidden" }}>
               {cell.events.map((ev) => {
-                const c = colorForType(ev.type);
+                const c = resolveEventColor(ev.projectColor, colorForType(ev.type));
                 return (
                   <div
                     key={ev.eventId}

@@ -2,6 +2,7 @@
 // 00:00–24:00 day, scrolled to keep the now line centered (clamped to the day edges) via
 // useNowScroll. Lives inside the framed calendar card with a centered day header; the now/next
 // card is in the side panel. Reads buildDay + tokens.
+import { resolveEventColor } from "@dayboard/core";
 import { useRef } from "react";
 import { colorForType, colors, hexA, hourPx, radii } from "./theme";
 import type { DisplayConfig, OccurrenceDTO } from "./types";
@@ -69,7 +70,7 @@ export function DayView({ config, occurrences, now }: Props) {
             {day.events.map((e, i) => {
               const top = minutesToTop(e.startMinutes);
               const height = Math.max(20, ((e.endMinutes - e.startMinutes) / 60) * HOUR_PX);
-              const c = colorForType(e.type);
+              const c = resolveEventColor(e.projectColor, colorForType(e.type));
               const isBlock = e.type === "block";
               return (
                 <div

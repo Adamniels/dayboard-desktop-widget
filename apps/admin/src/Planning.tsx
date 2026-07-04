@@ -1,7 +1,7 @@
 // The Projects, Reminders & timers, Notes, and Display & sync tabs of the control room.
 // Transcribed from the prototype's admin surface; drives the existing REST API, and the
 // display reflects changes live.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createNote,
   createProject,
@@ -25,6 +25,7 @@ import {
   setTodoStatus,
   startTimer,
   updateNote,
+  updateProject,
 } from "./api";
 import { colors, hexA } from "./theme";
 import type { DisplayView, NoteRow, ProjectRow, ReminderRow, SyncStatus, TimerRow, TodoRow } from "./types";
@@ -65,10 +66,28 @@ export function ProjectsTab({ projects, onChanged }: { projects: ProjectRow[]; o
   );
 }
 
+/** Preset palette for project colors (FR-PROJ-4), tuned to the dark theme. */
+const PROJECT_COLORS = [
+  "#3FB8AF", // teal
+  "#7C6CF6", // violet
+  "#5661D6", // indigo
+  "#4FA3E3", // sky
+  "#55B685", // green
+  "#E2A23B", // amber
+  "#E07A45", // orange
+  "#E25D6E", // rose
+  "#D66BC4", // pink
+  "#8E8AAE", // slate
+];
+
 function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: () => void }) {
   const [open, setOpen] = useState(false);
   const [todos, setTodos] = useState<TodoRow[]>([]);
   const [draft, setDraft] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [nameDraft, setNameDraft] = useState(project.name);
+  const [hexDraft, setHexDraft] = useState("");
+  const cancelRename = useRef(false);
   const { dialog, confirmDelete } = useConfirmDelete();
   const load = () => getTodos(project.id).then(setTodos).catch(() => setTodos([]));
   useEffect(() => {
@@ -77,14 +96,70 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
 
   const openCount = todos.filter((t) => t.status !== "done").length;
   const dot = project.color ?? colors.accent;
+  const check = project.color ?? colors.teal;
+
+  // Commit runs on blur only; Enter/Escape just blur (Escape flags a cancel first), so the
+  // PATCH fires exactly once per edit.
+  async function commitRename() {
+    setRenaming(false);
+    const name = nameDraft.trim();
+    const cancelled = cancelRename.current;
+    cancelRename.current = false;
+    if (cancelled || !name || name === project.name) {
+      setNameDraft(project.name);
+      return;
+    }
+    await updateProject(project.id, { name });
+    onChanged();
+  }
+
+  async function setColor(color: string | null) {
+    await updateProject(project.id, { color });
+    onChanged();
+  }
+
+  function commitHex() {
+    const m = hexDraft.trim().match(/^#?([0-9a-fA-F]{6})$/);
+    if (!m) return;
+    setHexDraft("");
+    void setColor(`#${m[1]!.toLowerCase()}`);
+  }
 
   return (
     <>
       {dialog}
       <div style={{ ...card, padding: 0, overflow: "hidden" }}>
-      <button onClick={() => setOpen((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: "transparent", border: "none", padding: "16px 18px", cursor: "pointer", color: colors.text }}>
+      <div role="button" onClick={() => setOpen((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: "transparent", border: "none", padding: "16px 18px", cursor: "pointer", color: colors.text, boxSizing: "border-box" }}>
         <span style={{ width: 11, height: 11, borderRadius: 4, background: dot, flex: "0 0 auto" }} />
-        <span style={{ fontSize: 15, fontWeight: 600, flex: 1 }}>{project.name}</span>
+        {renaming ? (
+          <TextInput
+            value={nameDraft}
+            autoFocus
+            onChange={(e) => setNameDraft(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+              if (e.key === "Escape") {
+                cancelRename.current = true;
+                e.currentTarget.blur();
+              }
+            }}
+            onBlur={() => void commitRename()}
+            style={{ height: 32, fontSize: 14, flex: 1, width: "auto" }}
+          />
+        ) : (
+          <span
+            title="Click to rename"
+            onClick={(e) => {
+              e.stopPropagation();
+              setNameDraft(project.name);
+              setRenaming(true);
+            }}
+            style={{ fontSize: 15, fontWeight: 600, flex: 1 }}
+          >
+            {project.name}
+          </span>
+        )}
         {open && <span style={{ fontSize: 12, color: colors.textFaint, background: colors.surfaceUp, padding: "3px 9px", borderRadius: 7 }}>{openCount} open</span>}
         <button
           onClick={async (e) => {
@@ -98,7 +173,7 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
           Delete
         </button>
         <span style={{ color: colors.textFaint, transform: open ? "rotate(180deg)" : "none", transition: "transform .15s" }}>⌄</span>
-      </button>
+      </div>
       {open && (
         <div style={{ padding: "0 18px 16px", display: "flex", flexDirection: "column", gap: 2 }}>
           {todos.map((t) => {
@@ -110,7 +185,7 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
                     await setTodoStatus(t.id, done ? "open" : "done");
                     void load();
                   }}
-                  style={{ width: 20, height: 20, borderRadius: 6, flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#08080B", fontWeight: 700, background: done ? colors.teal : "transparent", border: done ? `1px solid ${colors.teal}` : `1.5px solid ${hexA("#ffffff", 0.3)}`, cursor: "pointer" }}
+                  style={{ width: 20, height: 20, borderRadius: 6, flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#08080B", fontWeight: 700, background: done ? check : "transparent", border: done ? `1px solid ${check}` : `1.5px solid ${project.color ? hexA(project.color, 0.6) : hexA("#ffffff", 0.3)}`, cursor: "pointer" }}
                 >
                   {done ? "✓" : ""}
                 </button>
@@ -128,6 +203,32 @@ function ProjectCard({ project, onChanged }: { project: ProjectRow; onChanged: (
               style={{ height: 38 }}
             />
             <GhostButton onClick={addTodo} style={{ height: 38 }}>Add</GhostButton>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 14, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11.5, color: colors.textDim, fontWeight: 500, marginRight: 3 }}>Color</span>
+            {PROJECT_COLORS.map((c) => (
+              <button
+                key={c}
+                title={c}
+                onClick={() => void setColor(c)}
+                style={{ width: 20, height: 20, borderRadius: 6, background: c, cursor: "pointer", padding: 0, border: project.color?.toLowerCase() === c.toLowerCase() ? "2px solid #fff" : `1px solid ${hexA("#ffffff", 0.15)}`, boxSizing: "border-box" }}
+              />
+            ))}
+            <button
+              title="No color"
+              onClick={() => void setColor(null)}
+              style={{ width: 20, height: 20, borderRadius: 6, background: "transparent", color: colors.textFaint, border: `1px dashed ${hexA("#ffffff", 0.3)}`, cursor: "pointer", fontSize: 11, lineHeight: 1, padding: 0, boxSizing: "border-box" }}
+            >
+              ×
+            </button>
+            <TextInput
+              value={hexDraft}
+              onChange={(e) => setHexDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") commitHex(); }}
+              onBlur={commitHex}
+              placeholder="#8AB4F8"
+              style={{ width: 92, height: 30, fontSize: 12.5, flex: "0 0 auto" }}
+            />
           </div>
         </div>
       )}
@@ -318,6 +419,7 @@ export function NotesTab({ projects }: { projects: ProjectRow[] }) {
   useEffect(() => { void load(); }, []);
 
   const projName = (id: string | null) => (id ? projects.find((p) => p.id === id)?.name ?? "Project" : null);
+  const projColor = (id: string | null) => (id ? projects.find((p) => p.id === id)?.color ?? null : null);
 
   return (
     <>
@@ -342,6 +444,7 @@ export function NotesTab({ projects }: { projects: ProjectRow[] }) {
             key={n.id}
             note={n}
             projLabel={projName(n.projectId) ?? "General"}
+            projColor={projColor(n.projectId)}
             hasProject={n.projectId != null}
             confirmDelete={confirmDelete}
             reload={load}
@@ -357,12 +460,14 @@ export function NotesTab({ projects }: { projects: ProjectRow[] }) {
 function NoteCard({
   note,
   projLabel,
+  projColor,
   hasProject,
   confirmDelete,
   reload,
 }: {
   note: NoteRow;
   projLabel: string;
+  projColor: string | null;
   hasProject: boolean;
   confirmDelete: (kind: "note", label: string) => Promise<boolean>;
   reload: () => void;
@@ -396,7 +501,7 @@ function NoteCard({
         <Markdown source={note.body} style={{ fontSize: 13.5, lineHeight: 1.55, color: "rgba(255,255,255,.82)" }} />
       )}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 7, color: hasProject ? "#fff" : colors.textDim, background: hasProject ? hexA(colors.accent, 0.22) : colors.surfaceUp }}>{projLabel}</span>
+        <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 7, color: hasProject ? "#fff" : colors.textDim, background: hasProject ? hexA(projColor ?? colors.accent, 0.22) : colors.surfaceUp }}>{projLabel}</span>
         <div style={{ display: "flex", gap: 12 }}>
           {!editing && (
             <button onClick={() => { setDraft(note.body); setEditing(true); }} style={{ fontSize: 11.5, color: colors.textFaint, background: "transparent", border: "none", cursor: "pointer" }}>Edit</button>

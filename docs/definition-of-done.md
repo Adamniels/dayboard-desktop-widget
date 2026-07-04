@@ -26,6 +26,8 @@ off by Adam.
 | FR-RT-1 | US-VIEW1 | Data change emits WebSocket message | Auto | Todo |
 | FR-PROJ-1 | US-TODO1 | Project CRUD endpoints | Auto | Todo |
 | FR-PROJ-2 | US-TODO1 | Deleting a project confirms; states to-dos go with it | Auto + Review | Todo |
+| FR-PROJ-3 | US-TODO1 | Inline rename persists via PATCH /projects/:id; blank rejected | Auto + Review | Todo |
+| FR-PROJ-4 | US-TODO1 | Project color wins over type color; shown across display and admin | Auto + Review | Todo |
 | FR-TODO-1 | US-TODO1 | Todo CRUD with status under a project | Auto | Todo |
 | FR-TODO-2 | US-TODO1 | Todos surface only inside a linked block | Auto | Todo |
 | FR-TODO-3 | US-TODO1 | Deleting a to-do asks for confirmation first | Auto + Review | Todo |

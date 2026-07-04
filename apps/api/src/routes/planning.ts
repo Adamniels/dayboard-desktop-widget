@@ -30,6 +30,14 @@ const todoBody = z.object({
 });
 const noteBody = z.object({ body: z.string().min(1), projectId: z.string().uuid().nullish() });
 
+/** Attach the linked project's color to project-scoped rows (FR-PROJ-4 read model). */
+async function withProjectColor<T extends { projectId: string | null }>(
+  rows: T[],
+): Promise<(T & { projectColor: string | null })[]> {
+  const colorById = new Map((await listProjects()).map((p) => [p.id, p.color]));
+  return rows.map((r) => ({ ...r, projectColor: r.projectId ? colorById.get(r.projectId) ?? null : null }));
+}
+
 export async function planningRoutes(app: FastifyInstance): Promise<void> {
   // projects
   app.get("/projects", () => listProjects());
@@ -83,7 +91,7 @@ export async function planningRoutes(app: FastifyInstance): Promise<void> {
   });
 
   // notes
-  app.get("/notes", (req) => listNotes((req.query as { projectId?: string }).projectId));
+  app.get("/notes", async (req) => withProjectColor(await listNotes((req.query as { projectId?: string }).projectId)));
   app.post("/notes", async (req, reply) => {
     const p = noteBody.safeParse(req.body);
     if (!p.success) return reply.code(400).send({ error: p.error.flatten() });
@@ -124,6 +132,6 @@ export async function planningRoutes(app: FastifyInstance): Promise<void> {
       projectId: o.projectId,
     }));
     const todos = await listAllTodos();
-    return surfaceTodos(now, linked, todos);
+    return withProjectColor(surfaceTodos(now, linked, todos));
   });
 }

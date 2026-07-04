@@ -106,6 +106,20 @@
       "testMatch": [{ "file": "confirm", "name": "delete confirmation" }]
     },
     {
+      "id": "FR-PROJ-3",
+      "story": "US-TODO1",
+      "type": "auto+review",
+      "verify": "Renaming a project persists via PATCH /projects/:id (covered by project crud); the inline click-to-edit flow (Enter/blur saves, Escape cancels, blank rejected) reviewed live.",
+      "testMatch": [{ "file": "api.integration", "name": "project crud" }]
+    },
+    {
+      "id": "FR-PROJ-4",
+      "story": "US-TODO1",
+      "type": "auto+review",
+      "verify": "resolveEventColor: the linked project's color wins over the type color, blank/missing falls back; picker, read-model plumbing, and color placements on display/admin reviewed live.",
+      "testMatch": [{ "file": "core", "name": "project color wins" }]
+    },
+    {
       "id": "FR-TODO-1",
       "story": "US-TODO1",
       "type": "auto",

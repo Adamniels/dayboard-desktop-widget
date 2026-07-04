@@ -2,6 +2,7 @@
 // an hour gutter, events positioned and striped by type, and a now line with a dot. Spans the
 // full 00:00–24:00 day and scrolls to keep the now line centered (clamped to the day edges) via
 // useNowScroll. Lives inside the framed calendar card; the now/next card is in the side panel.
+import { resolveEventColor } from "@dayboard/core";
 import { useRef } from "react";
 import { colorForType, colors, hexA, hourPx, radii } from "./theme";
 import type { DisplayConfig, OccurrenceDTO } from "./types";
@@ -98,7 +99,7 @@ export function WeekView({ config, occurrences, now, landscape }: Props) {
                   .map((e, i) => {
                     const top = minutesToTop(e.startMinutes);
                     const height = Math.max(16, ((e.endMinutes - e.startMinutes) / 60) * HOUR_PX);
-                    const c = colorForType(e.type);
+                    const c = resolveEventColor(e.projectColor, colorForType(e.type));
                     const isBlock = e.type === "block";
                     return (
                       <div

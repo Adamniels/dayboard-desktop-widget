@@ -1,7 +1,7 @@
 import type { Todo } from "@dayboard/shared";
 import { describe, expect, it } from "vitest";
 import type { Occurrence } from "./occurrences";
-import { type LinkedOccurrence, nowNext, surfaceTodos } from "./rules";
+import { type LinkedOccurrence, nowNext, resolveEventColor, surfaceTodos } from "./rules";
 
 function occ(startIso: string, endIso: string): Occurrence {
   return { start: new Date(startIso), end: new Date(endIso), isOverride: false, cancelled: false };
@@ -73,5 +73,23 @@ describe("surface todos during linked block", () => {
   it("ignores events with no project link", () => {
     const unlinked = linked("2026-06-29T14:00:00.000Z", "2026-06-29T15:00:00.000Z", null);
     expect(surfaceTodos(now, [unlinked], todos)).toEqual([]);
+  });
+});
+
+// FR-PROJ-4: the describe text contains "project color wins" so the verification map
+// resolves this suite.
+describe("event color resolution (project color wins)", () => {
+  it("uses the linked project's color over the type color", () => {
+    expect(resolveEventColor("#E2A23B", "#3FB8AF")).toBe("#E2A23B");
+  });
+
+  it("falls back to the type color when the project has none", () => {
+    expect(resolveEventColor(null, "#3FB8AF")).toBe("#3FB8AF");
+    expect(resolveEventColor(undefined, "#7C6CF6")).toBe("#7C6CF6");
+  });
+
+  it("treats a blank project color as absent", () => {
+    expect(resolveEventColor("   ", "#3FB8AF")).toBe("#3FB8AF");
+    expect(resolveEventColor("", "#3FB8AF")).toBe("#3FB8AF");
   });
 });

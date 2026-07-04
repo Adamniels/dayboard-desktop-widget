@@ -43,6 +43,7 @@ export interface DayEvent {
   eventId: string;
   title: string;
   type: OccurrenceDTO["type"];
+  projectColor: string | null;
   startMinutes: number;
   endMinutes: number;
   isOverride: boolean;
@@ -72,6 +73,7 @@ export function buildDay(occurrences: OccurrenceDTO[], timezone: string, now: Da
         eventId: o.eventId,
         title: o.title,
         type: o.type,
+        projectColor: o.projectColor,
         startMinutes,
         endMinutes,
         isOverride: o.isOverride,
@@ -85,6 +87,7 @@ export interface MonthEvent {
   eventId: string;
   title: string;
   type: OccurrenceDTO["type"];
+  projectColor: string | null;
 }
 
 export interface MonthCell {
@@ -126,7 +129,7 @@ export function buildMonth(occurrences: OccurrenceDTO[], timezone: string, ancho
   for (const o of occurrences) {
     const key = tzDateKey(new Date(o.start), timezone);
     const list = byDate.get(key) ?? [];
-    list.push({ eventId: o.eventId, title: o.title, type: o.type });
+    list.push({ eventId: o.eventId, title: o.title, type: o.type, projectColor: o.projectColor });
     byDate.set(key, list);
   }
 

@@ -54,6 +54,12 @@ live truth on what actually passes. Phase grouping mirrors `docs/roadmap.md`.
   dos.
 - **FR-PROJ-2** The admin shall require an explicit confirmation before deleting a project,
   making clear that its to dos are removed with it.
+- **FR-PROJ-3** Adam shall rename a project inline from the admin (click the name, edit in
+  place); blank or unchanged names shall not issue a write.
+- **FR-PROJ-4** Adam shall assign a color to a project from the admin (preset palette or
+  hex), and the color shall be reflected on the display's event boxes, the now/next card,
+  and project-linked notes and to dos, with the project color winning over the event type
+  color and the type color as the fallback.
 
 ### FR-TODO — To dos
 - **FR-TODO-1** Adam shall create to dos under a project, each with a status.
