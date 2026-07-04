@@ -342,6 +342,7 @@ export function RemindersTab() {
 
 function PomodoroControl() {
   const [timers, setTimers] = useState<TimerRow[]>([]);
+  const [workMins, setWorkMins] = useState(25);
   const [, setTick] = useState(0);
   const load = () => getTimers().then(setTimers).catch(() => setTimers([]));
   useEffect(() => {
@@ -352,7 +353,8 @@ function PomodoroControl() {
   }, []);
 
   const active = timers.find((t) => t.status !== "done") ?? null;
-  const total = (active?.workMinutes ?? 25) * 60_000;
+  // Idle ring previews the entered minutes, so the dial reflects what Start will run.
+  const total = (active?.workMinutes ?? (workMins > 0 ? workMins : 25)) * 60_000;
   const endsAt = active?.endsAt ? new Date(active.endsAt).getTime() : Date.now() + total;
   const remainingMs = !active ? total : active.status === "paused" ? active.remainingMs ?? 0 : Math.max(0, endsAt - Date.now());
   const fraction = total > 0 ? Math.min(1, remainingMs / total) : 0;
@@ -363,12 +365,14 @@ function PomodoroControl() {
   const r = 52;
   const circ = 2 * Math.PI * r;
 
-  async function startWork(workMinutes: number) {
+  async function startWork() {
+    const workMinutes = Math.round(workMins);
+    if (workMinutes < 1) return;
     await startTimer({ mode: "pomodoro", workMinutes, breakMinutes: 5, longBreakMinutes: 15, cyclesTarget: 4, chime: true });
     void load();
   }
   async function toggle() {
-    if (!active) return startWork(25);
+    if (!active) return startWork();
     if (active.status === "running") await pauseTimer(active.id);
     else await resumeTimer(active.id);
     void load();
@@ -377,10 +381,6 @@ function PomodoroControl() {
     if (active) await resetTimer(active.id);
     void load();
   }
-
-  const preset: React.CSSProperties = {
-    flex: 1, height: 36, borderRadius: 9, border: `1px solid ${colors.borderInput}`, background: colors.surface, color: colors.textMuted, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-  };
 
   return (
     <div style={{ ...card, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
@@ -395,10 +395,18 @@ function PomodoroControl() {
           <span style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: ".08em", color: colors.textFaint, fontWeight: 600 }}>{state}</span>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 6, width: "100%" }}>
-        {[25, 15, 5].map((m) => (
-          <button key={m} onClick={() => startWork(m)} style={preset}>{m}m</button>
-        ))}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", height: 38, padding: "0 13px", borderRadius: 10, border: `1px solid ${colors.borderInput}`, background: colors.inputBg, boxSizing: "border-box" }}>
+        <span style={{ color: colors.textDim, fontSize: 13 }}>focus for</span>
+        <input
+          type="number"
+          min={1}
+          value={workMins}
+          onChange={(e) => setWorkMins(Number(e.target.value) || 0)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !active) void startWork(); }}
+          disabled={active != null}
+          style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", color: "#fff", fontSize: 14, textAlign: "right", outline: "none", opacity: active ? 0.4 : 1 }}
+        />
+        <span style={{ color: colors.textDim, fontSize: 13 }}>min</span>
       </div>
       <div style={{ display: "flex", gap: 8, width: "100%" }}>
         <PrimaryButton onClick={toggle} style={{ flex: 1 }}>{!active ? "Start" : active.status === "running" ? "Pause" : "Resume"}</PrimaryButton>
