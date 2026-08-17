@@ -4,6 +4,7 @@ import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { getSetting, setActiveView } from "../repo/display";
 import { getCredential, listCalendars } from "../repo/google";
+import { getSyncHealth, triggerSyncNow } from "../sync/engine";
 import { broadcast } from "../ws";
 
 export async function metaRoutes(app: FastifyInstance): Promise<void> {
@@ -52,10 +53,22 @@ export async function metaRoutes(app: FastifyInstance): Promise<void> {
       .map((c) => c.lastSyncedAt)
       .filter((d): d is Date => d != null)
       .sort((a, b) => b.getTime() - a.getTime())[0];
+    const health = getSyncHealth();
     return {
       connected: credential != null,
       account: credential?.accountEmail ?? null,
       lastSyncedAt: lastSyncedAt?.toISOString() ?? null,
+      lastAttemptAt: health.lastAttemptAt?.toISOString() ?? null,
+      lastError: health.lastError,
     };
+  });
+
+  // Manual sync (FR-CAL: on-demand cycle). Returns the outcome so the admin can show
+  // the real failure instead of a silently stale lastSyncedAt.
+  app.post("/sync/now", async (_req, reply) => {
+    const result = await triggerSyncNow();
+    if (result.status === "error") return reply.code(502).send(result);
+    if (result.status === "not_connected") return reply.code(409).send(result);
+    return result; // ok | already_running
   });
 }

@@ -25,6 +25,59 @@ import {
 
 let running = false;
 
+// Sync health, surfaced by /sync/status so failures are visible instead of only being
+// warn-level log lines inside the container.
+let lastAttemptAt: Date | null = null;
+let lastSuccessAt: Date | null = null;
+let lastError: string | null = null;
+
+export interface SyncHealth {
+  lastAttemptAt: Date | null;
+  lastSuccessAt: Date | null;
+  lastError: string | null;
+}
+
+export function getSyncHealth(): SyncHealth {
+  return { lastAttemptAt, lastSuccessAt, lastError };
+}
+
+function describeError(err: unknown): string {
+  if (err instanceof Error) {
+    // google-auth-library wraps OAuth failures; surface the useful part (e.g.
+    // invalid_grant = refresh token expired or revoked -> re-run google:connect).
+    const data = (err as { response?: { data?: unknown } }).response?.data;
+    if (data) return `${err.message} — ${JSON.stringify(data)}`;
+    return err.message;
+  }
+  return String(err);
+}
+
+export type SyncNowResult =
+  | { status: "ok"; changed: boolean }
+  | { status: "not_connected" }
+  | { status: "already_running" }
+  | { status: "error"; error: string };
+
+/** Run one cycle on demand (POST /sync/now), reusing the same overlap guard as the loop. */
+export async function triggerSyncNow(): Promise<SyncNowResult> {
+  if (running) return { status: "already_running" };
+  running = true;
+  lastAttemptAt = new Date();
+  try {
+    const client = await authedClient();
+    if (!client) return { status: "not_connected" };
+    const changed = await runSyncOnce();
+    lastSuccessAt = new Date();
+    lastError = null;
+    return { status: "ok", changed };
+  } catch (err) {
+    lastError = describeError(err);
+    return { status: "error", error: lastError };
+  } finally {
+    running = false;
+  }
+}
+
 /** One full sync cycle. Returns true if any local data changed (so callers can broadcast). */
 export async function runSyncOnce(): Promise<boolean> {
   const client = await authedClient();
@@ -90,8 +143,16 @@ export function startSyncLoop(log: FastifyBaseLogger): void {
   setInterval(() => {
     if (running) return;
     running = true;
+    lastAttemptAt = new Date();
     runSyncOnce()
-      .catch((err) => log.warn({ err }, "google sync cycle failed; will retry"))
+      .then(() => {
+        lastSuccessAt = new Date();
+        lastError = null;
+      })
+      .catch((err) => {
+        lastError = describeError(err);
+        log.warn({ err }, "google sync cycle failed; will retry");
+      })
       .finally(() => {
         running = false;
       });

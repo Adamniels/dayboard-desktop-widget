@@ -150,6 +150,44 @@ describe("initial sync imports events", () => {
   });
 });
 
+describe("manual sync endpoint", () => {
+  it("returns not_connected (409) when no Google credential exists", async () => {
+    (client.authedClient as unknown as Mock).mockResolvedValueOnce(null);
+    const app = await buildServer();
+    await app.ready();
+    const res = await app.inject({ method: "POST", url: "/sync/now" });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().status).toBe("not_connected");
+    await app.close();
+  });
+
+  it("runs a cycle on demand and surfaces the error in /sync/status when it fails", async () => {
+    await upsertCredential({
+      accountEmail: "adam@example.com",
+      refreshToken: "refresh-xyz",
+      scope: "https://www.googleapis.com/auth/calendar",
+    });
+    await saveCalendarSelection([{ id: "cal-primary", summary: "Primary", primaryWrite: true }]);
+    const app = await buildServer();
+    await app.ready();
+
+    // Success path.
+    const ok = await app.inject({ method: "POST", url: "/sync/now" });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json().status).toBe("ok");
+
+    // Failure path: the error is returned and then visible in /sync/status.
+    (client.pullChanges as unknown as Mock).mockRejectedValue(new Error("invalid_grant"));
+    const failed = await app.inject({ method: "POST", url: "/sync/now" });
+    expect(failed.statusCode).toBe(502);
+    expect(failed.json().error).toContain("invalid_grant");
+
+    const status = await app.inject({ method: "GET", url: "/sync/status" });
+    expect(status.json().lastError).toContain("invalid_grant");
+    await app.close();
+  });
+});
+
 describe("works when google unreachable", () => {
   it("keeps local reads and writes working when a sync fails", async () => {
     await saveCalendarSelection([{ id: "cal-primary", summary: "Primary", primaryWrite: true }]);

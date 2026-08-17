@@ -9,6 +9,7 @@ import type {
   OccurrenceDTO,
   ProjectRow,
   ReminderRow,
+  SyncNowResult,
   SyncStatus,
   TimerRow,
   TodoRow,
@@ -65,6 +66,12 @@ export async function deleteEvent(id: string): Promise<void> {
 
 export async function getSyncStatus(): Promise<SyncStatus> {
   return json(await fetch(`${BASE}/sync/status`));
+}
+
+/** Trigger one sync cycle now. Non-2xx still carries a JSON body describing why. */
+export async function triggerSync(): Promise<SyncNowResult> {
+  const res = await fetch(`${BASE}/sync/now`, { method: "POST" });
+  return (await res.json()) as SyncNowResult;
 }
 
 export async function getCalendars(): Promise<CalendarInfo[]> {

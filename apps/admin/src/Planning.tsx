@@ -24,6 +24,7 @@ import {
   setReminderEnabled,
   setTodoStatus,
   startTimer,
+  triggerSync,
   updateNote,
   updateProject,
 } from "./api";
@@ -528,10 +529,34 @@ const DISPLAY_URL = import.meta.env.VITE_DISPLAY_URL ?? "http://localhost:5173";
 export function DisplayTab() {
   const [view, setView] = useState<DisplayView | null>(null);
   const [sync, setSync] = useState<SyncStatus | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null);
   useEffect(() => {
     getDisplaySetting().then((d) => setView(d.activeView)).catch(() => {});
     getSyncStatus().then(setSync).catch(() => setSync(null));
   }, []);
+
+  async function syncNow() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const result = await triggerSync();
+      if (result.status === "ok") {
+        setSyncMsg({ ok: true, text: result.changed ? "Synced — changes pulled in." : "Synced — already up to date." });
+      } else if (result.status === "already_running") {
+        setSyncMsg({ ok: true, text: "A sync is already running." });
+      } else if (result.status === "not_connected") {
+        setSyncMsg({ ok: false, text: "Not connected to Google — re-run google:connect on the Mini." });
+      } else {
+        setSyncMsg({ ok: false, text: `Sync failed: ${result.error}` });
+      }
+    } catch {
+      setSyncMsg({ ok: false, text: "Could not reach the api." });
+    } finally {
+      setSyncing(false);
+      getSyncStatus().then(setSync).catch(() => {});
+    }
+  }
 
   async function choose(v: DisplayView) {
     setView(v);
@@ -586,8 +611,21 @@ export function DisplayTab() {
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${colors.divider}` }}>
             <span style={{ color: colors.teal, fontSize: 18 }}>⇄</span>
             <div style={{ flex: 1, fontSize: 12.5, color: colors.textMuted, lineHeight: 1.45 }}>
-              Two-way sync is on. Last sync <span style={{ color: colors.tealText }}>{sync.lastSyncedAt ? new Date(sync.lastSyncedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "never"}</span>. Changes here appear on your phone.
+              Two-way sync is on. Last sync <span style={{ color: colors.tealText }}>{sync.lastSyncedAt ? new Date(sync.lastSyncedAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "never"}</span>. Changes here appear on your phone.
             </div>
+            <GhostButton onClick={syncNow} disabled={syncing} style={{ height: 34, opacity: syncing ? 0.6 : 1 }}>
+              {syncing ? "Syncing…" : "Sync now"}
+            </GhostButton>
+          </div>
+        )}
+        {sync?.lastError && !syncMsg && (
+          <div style={{ marginTop: 12, fontSize: 12.5, lineHeight: 1.45, color: "#f2b8b5" }}>
+            Last sync attempt failed: {sync.lastError}
+          </div>
+        )}
+        {syncMsg && (
+          <div style={{ marginTop: 12, fontSize: 12.5, lineHeight: 1.45, color: syncMsg.ok ? colors.tealText : "#f2b8b5" }}>
+            {syncMsg.text}
           </div>
         )}
       </div>

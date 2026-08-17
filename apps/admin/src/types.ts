@@ -47,7 +47,15 @@ export interface SyncStatus {
   connected: boolean;
   account: string | null;
   lastSyncedAt: string | null;
+  lastAttemptAt: string | null;
+  lastError: string | null;
 }
+
+export type SyncNowResult =
+  | { status: "ok"; changed: boolean }
+  | { status: "not_connected" }
+  | { status: "already_running" }
+  | { status: "error"; error: string };
 
 export interface CalendarInfo {
   id: string;
