@@ -63,6 +63,36 @@ honor. Keep them stable so the AI workflow stays predictable.)
 - **Leave changes uncommitted.** Adam reviews and commits himself.
 - Detail and rationale live in `.claude/memory/conventions/` and `decisions/`.
 
+## Delegated tickets (Claude Dispatch)
+
+This Mac Mini already runs Dayboard in **production** (`dayboard-prod-*` containers,
+`docs/DEPLOY-RUNBOOK.md`) as well as being where delegated Claude Code work happens.
+For a ticket dispatched from mobile, use the `implement-ticket` skill
+(`.claude/skills/implement-ticket/SKILL.md`); it runs a lead → verifier → reviewer
+(→ ui-reviewer for visible changes) pipeline, sequential only, no agent teams. Full
+rationale: `docs/agent-workflow.md` and
+`.claude/memory/decisions/delegated-ticket-workflow.md`. This is separate from the
+`FR-*`/`NFR-*` feature loop above — a feature-shaped ticket still goes through that loop
+as one step; a small fix does not need a requirement ID.
+
+**Ask Adam first, always, regardless of what a ticket authorizes:** dependency changes,
+architectural decisions, schema/data changes, auth/secret/permission changes, scope
+expansion beyond the ticket, deletions, infrastructure changes, and anything with an
+external side effect — most importantly, any `docker compose ... up/restart/down`
+against the live `dayboard-prod-*` stack. Commit, push, and draft-PR only when the
+specific ticket explicitly grants it. **Never merge or deploy** — that stays Adam-only
+in every case.
+
+**Never read or print** `.env*`, `secrets/`, or anything else covered by those
+`.gitignore` rules, beyond confirming a variable name exists if strictly necessary.
+
+A delegated ticket is done when: its acceptance criteria are met with evidence (not a
+summary), it stayed in scope, the verifier concluded `VERIFIED`, the reviewer concluded
+`APPROVE`, and nothing was committed/pushed/merged/deployed beyond what was authorized.
+This is a different bar than the FR/NFR "definition of done"
+(`docs/definition-of-done.md`), which is the traceability matrix for spec'd features —
+use whichever applies to the ticket at hand.
+
 ## How memory works here
 
 Durable knowledge for this project lives in `.claude/memory/` and is committed to git,

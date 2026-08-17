@@ -39,6 +39,7 @@ conversation.
 - [Datetime + recurrence model](decisions/datetime-recurrence-model.md) — events are absolute datetimes + timezone with recurrence expanded to occurrences; the prototype's weekday-index shape is not the schema.
 - [Display active view setting](decisions/display-active-view-setting.md) — admin picks one active view via a display_setting singleton; PATCH /display broadcasts display.changed and the kiosk switches.
 - [Project color read model](decisions/project-color-read-model.md) — projectColor rides the api read models; resolveEventColor in core (project wins, type falls back); admin grid stays type-colored.
+- [Delegated ticket workflow](decisions/delegated-ticket-workflow.md) — sequential lead → verifier → reviewer (→ ui-reviewer) pipeline via the implement-ticket skill, separate from the FR/NFR feature loop; merge/deploy always Adam-only.
 
 ## Conventions
 
