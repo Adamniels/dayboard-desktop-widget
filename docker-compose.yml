@@ -1,3 +1,11 @@
+# Explicit project name: without this, Compose derives the project name from the
+# directory, which docker-compose.prod.yml also does. Two files with the same project
+# name and a same-named "db" service collide at the Compose level regardless of
+# container_name — Compose will recreate whichever one it thinks is stale. This bit us
+# once already (a `pnpm db:up` here tore down and replaced dayboard-prod-db). Keep this
+# name different from docker-compose.prod.yml's, always.
+name: dayboard-dev
+
 services:
   db:
     image: postgres:16
@@ -18,3 +26,6 @@ services:
 
 volumes:
   dayboard-pgdata:
+    # Pinned to the concrete volume name already in use (created before this file had an
+    # explicit project name) so this rename doesn't orphan it.
+    name: dayboard-desktop-widget_dayboard-pgdata
