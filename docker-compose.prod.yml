@@ -10,6 +10,15 @@
 #
 # Names are suffixed -prod-* so they never collide with the dev docker-compose.yml
 # (dayboard-db / dayboard-pgdata) or with the habitquest stack.
+#
+# That container_name suffixing is NOT enough isolation on its own: without an explicit
+# top-level `name:`, Compose derives the project name from the directory, same as
+# docker-compose.yml does, and both files declare a service literally named "db". Compose
+# tracks ownership by (project, service), not container_name, so the two collided and a
+# `pnpm db:up` (meant to start a throwaway dev DB) once recreated this file's db
+# container instead, detaching the real data volume. `name:` below plus the pinned
+# volume name are the actual fix — keep this different from docker-compose.yml's name.
+name: dayboard-prod
 
 services:
   db:
@@ -83,3 +92,6 @@ services:
 
 volumes:
   dayboard-prod-data:
+    # Pinned to the concrete volume name already in use (created before this file had an
+    # explicit project name) so this rename doesn't orphan the real data.
+    name: dayboard-desktop-widget_dayboard-prod-data
